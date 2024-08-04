@@ -9,11 +9,17 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    database.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    sqlite/sqlite3.c
 
 HEADERS += \
-    mainwindow.h
+    data.h \
+    database.h \
+    mainwindow.h \
+    sqlite/sqlite3.h \
+    sqlite/sqlite3ext.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
