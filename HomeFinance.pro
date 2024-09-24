@@ -15,7 +15,6 @@ SOURCES += \
     sqlite/sqlite3.c
 
 HEADERS += \
-    data.h \
     database.h \
     mainwindow.h \
     sqlite/sqlite3.h \
