@@ -5,10 +5,12 @@
 #include <QFileDialog>
 #include <QApplication>
 #include <QMenuBar>
+#include <QToolBar>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
+    setMinimumSize(800, 600);
     m_db = new Database(this);
     createActions();
     createMenus();

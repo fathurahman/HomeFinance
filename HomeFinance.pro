@@ -12,13 +12,15 @@ SOURCES += \
     database.cpp \
     main.cpp \
     mainwindow.cpp \
-    sqlite/sqlite3.c
+    sqlite/sqlite3.c \
+    wallet.cpp
 
 HEADERS += \
     database.h \
     mainwindow.h \
     sqlite/sqlite3.h \
-    sqlite/sqlite3ext.h
+    sqlite/sqlite3ext.h \
+    wallet.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

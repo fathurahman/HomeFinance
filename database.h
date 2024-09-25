@@ -10,35 +10,6 @@
 #include <QJsonArray>
 
 
-struct JournalEntry
-{
-    QString name;
-    int num;
-    int value;
-
-    QJsonArray save() const;
-    void load(const QJsonArray &a);
-
-    static QJsonArray saveArray(const QList<JournalEntry>& entries);
-    static QList<JournalEntry> loadArray(const QJsonArray& a);
-};
-
-struct Journal
-{
-    QDateTime timestamp;
-    QString title;
-    bool isDebit;
-    QList<JournalEntry> entries;
-
-    void addEntry(const QString& name, int num, int value);
-
-    QJsonArray save() const;
-    void load(const QJsonArray& a);
-
-    static QJsonArray saveArray(const QList<Journal>& journals);
-    static QList<Journal> loadArray(const QJsonArray& a);
-};
-
 struct Wallet
 {
     int index;
@@ -71,6 +42,7 @@ public:
     QStringList journalEntryNames(const QString& filter) const;
     
 signals:
+    void loaded();
 
 private:
 
