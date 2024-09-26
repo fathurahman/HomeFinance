@@ -1,9 +1,8 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
 #include <QAction>
-#include "database.h"
 
 class MainWindow : public QMainWindow
 {
@@ -14,8 +13,6 @@ public:
     ~MainWindow();
 
 private:
-    Database *m_db;
-
     QAction* m_actOpen;
     QAction* m_actSave;
     QAction* m_actSaveAs;

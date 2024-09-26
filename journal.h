@@ -1,4 +1,4 @@
-#ifndef JOURNAL_H
+﻿#ifndef JOURNAL_H
 #define JOURNAL_H
 
 #include <QObject>
@@ -10,6 +10,9 @@ struct JournalEntry
     int id;
     int quantity;
     int value;
+
+    QJsonValue save() const;
+    void load(const QJsonValue& json);
 };
 
 
@@ -23,7 +26,7 @@ public:
     inline QDateTime dateTime() const { return m_dateTime; }
     inline bool isDebit() const { return m_isDebit; }
 
-    int entriesNum() const;
+    inline int entriesNum() const { return m_entries.size(); }
     int addEntry(const QString& name, int quantity, int value);
     QString entryName(int index) const;
     int entryQuantity(int index) const;
@@ -44,16 +47,13 @@ public slots:
     void setEntryQuantity(int index, int quantity);
     void setEntryValue(int index, int value);
     void removeEntry(int index);
+    void cleanupEntries();
 
 private:
     QString m_title;
     QDateTime m_dateTime;
     int m_isDebit;
-    QList<JournalEntry> entries;
-
-private:
-
-    QString entryIdToName(int id) const;
+    QList<JournalEntry> m_entries;
 };
 
 #endif // JOURNAL_H

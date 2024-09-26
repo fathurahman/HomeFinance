@@ -9,8 +9,8 @@ struct Transaction
 {
     QDateTime timestamp;
     QString name;
-    int debit;
-    int credit;
+    int debit = 0;
+    int credit = 0;
     QString desc;
 };
 
@@ -21,8 +21,6 @@ public:
     explicit Wallet(QObject *parent = nullptr);
 
     inline const QString& name() const { return m_name; }
-    void setName(const QString& name);
-
     inline int value() const { return m_value; }
 
     inline int journalNum() const { return m_journals.size(); }
@@ -30,12 +28,16 @@ public:
     void addJournal(Journal* journal);
 
     int transactionNum() const;
-    Transaction transaction(int index);
+    Transaction transaction(int index) const;
 
     QJsonValue save() const;
     void load(const QJsonValue& json);
 
-signals:
+public slots:
+    void setName(const QString& name);
+    void setValue(int value);
+
+signals:    
     void loaded();
     void nameChanged(QString name);
     void journalAdded();

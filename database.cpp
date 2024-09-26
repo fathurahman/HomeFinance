@@ -7,40 +7,48 @@
 #include "database.h"
 
 
-QJsonObject Wallet::save() const
-{
-    QJsonObject o;
-    o.insert("name", QJsonValue(name));
-    o.insert("value", QJsonValue(value));
-    o.insert("journals", Journal::saveArray(journals));
-    return o;
-}
-
-void Wallet::load(const QJsonObject &o)
-{
-    name = o.value("name").toString();
-    value = o.value("value").toInt();
-    journals = Journal::loadArray(o.value("journals").toArray());
-}
-
-void Wallet::debug() const
-{
-    qDebug() << "Wallet:" << name << "Value:" << value;
-    for (const auto& j : journals)
-    {
-        qDebug() << "    Journal:" << j.title << "isDebit:" << j.isDebit << "Timestamp:" << j.timestamp.toString();
-        for (const auto& e : j.entries)
-        {
-            qDebug() << "        " << e.name << "x" << e.num << e.value;
-        }
-    }
-}
-
-
 Database::Database(QObject *parent)
     : QObject{parent}
 {
 
+}
+
+Wallet* Database::addWallet(const QString &name, int value)
+{
+    Wallet* wallet = new Wallet(this);
+    wallet->setName(name);
+    wallet->setValue(value);
+    m_wallets.append(wallet);
+    return wallet;
+}
+
+int Database::getJournalEntryId(const QString &name) const
+{
+    if (name.isEmpty())
+    {
+        return -1;
+    }
+    return m_journalEntryNames.indexOf(name);
+}
+
+QString Database::getJournalEntryName(int id) const
+{
+    if (id < 0)
+    {
+        return QString();
+    }
+    return m_journalEntryNames[id];
+}
+
+int Database::addJournalEntryName(const QString &name)
+{
+    int id = getJournalEntryId(name);
+    if (id < 0)
+    {
+        id = m_journalEntryNames.size();
+        m_journalEntryNames.append(name);
+    }
+    return id;
 }
 
 
@@ -51,119 +59,78 @@ bool Database::load(const QString& path)
     {
         return false;
     }
+    emit loading();
     auto json   = file.readAll();
     auto doc    = QJsonDocument::fromJson(json);
-    auto a      = doc.array();
-    const int n = a.size();
-    if (n > 0)
-    {
-        QSet<QString> names;
-        m_wallets.resize(n);
-        for (int i = 0; i < n; ++i)
-        {
-            auto  o = a[i].toObject();
-            auto& w = m_wallets[i];
-            w.index = i;
-            w.load(o);
-            for (const auto& j : w.journals)
-            {
-                for (const auto& e : j.entries)
-                {
-                    names.insert(e.name);
-                }
-            }
-        }
-        m_journalEntryNames = names.values();
-    }
-    else
-    {
-        m_wallets.clear();
-        m_journalEntryNames.clear();
-    }
+    auto o      = doc.object();
+    loadJournalEntryNames(o.value("names"));
+    loadWallets(o.value("wallets"));
+    emit loaded();
     return true;
 }
 
-bool Database::save(const QString& path)
+bool Database::save(const QString& path) const
 {
     QFile file(path);
     if (!file.open(QIODevice::WriteOnly))
     {
         return false;
     }
-    QJsonArray a;
-    const int n = m_wallets.size();
-    for (int i = 0; i < n; ++i)
-    {
-        auto o = m_wallets[i].save();
-        a.append(o);
-    }
-    QJsonDocument doc(a);
-    file.write(doc.toJson(QJsonDocument::Compact));
+    QJsonObject o;
+    o.insert("names", saveJournalEntryNames());
+    o.insert("wallets", saveWallets());
+    QJsonDocument doc(o);
+    auto json = doc.toJson(QJsonDocument::Compact);
+    file.write(json);
     return true;
 }
 
-int Database::addWallet(const QString &name, int value)
+void Database::loadJournalEntryNames(const QJsonValue &json)
 {
-    for (const auto& it : m_wallets)
+    m_journalEntryNames.clear();
+    QJsonArray a = json.toArray();
+    for (const auto& v : a)
     {
-        if (it.name == name)
-            return -1;
+        const QString name = v.toString();
+        m_journalEntryNames.append(name);
     }
-    Wallet w;
-    w.index = m_wallets.size();
-    w.name = name;
-    w.value = value;
-    m_wallets.push_back(w);
-    return w.index;
 }
 
-int Database::addJournal(int walletIndex, const Journal &journal)
+void Database::loadWallets(const QJsonValue &json)
 {
-    // fail if the wallet index is not valid
-    if (walletIndex < 0 || walletIndex >= m_wallets.size())
+    for (auto* wallet : m_wallets)
     {
-        return -1;
+        delete wallet;
     }
-    // calculate journal value and add unique journal entry names
-    int journalValue = 0;
-    for (const auto& e : journal.entries)
+    m_wallets.clear();
+    QJsonArray a = json.toArray();
+    for (const auto& v : a)
     {
-        journalValue += e.value;
-        if (!m_journalEntryNames.contains(e.name))
-        {
-            m_journalEntryNames.push_back(e.name);
-        }
+        auto* w = new Wallet(this);
+        w->load(v);
+        m_wallets.append(w);
     }
-     // fail if the journal has no value
-    if (journalValue <= 0)
-    {
-        return -1;
-    }
-    // add journal to wallet
-    Wallet& wallet = m_wallets[walletIndex];
-    wallet.journals.push_back(journal);
-    // update wallet's value
-    if (journal.isDebit)
-    {
-        wallet.value += journalValue;
-    }
-    else
-    {
-        wallet.value -= journalValue;
-    }
-    return wallet.journals.size() - 1;
 }
 
-QStringList Database::journalEntryNames(const QString& filter) const
+QJsonValue Database::saveJournalEntryNames() const
 {
-    QStringList ret;
+    QJsonArray a;
     for (const auto& name : m_journalEntryNames)
     {
-        if (name.startsWith(filter))
-        {
-            ret << name;
-        }
+        a.append(QJsonValue(name));
     }
-    return ret;
+    return a;
 }
+
+QJsonValue Database::saveWallets() const
+{
+    QJsonArray a;
+    for (const auto* w : m_wallets)
+    {
+        a.append(w->save());
+    }
+    return a;
+}
+
+
 

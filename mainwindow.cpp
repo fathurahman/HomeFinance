@@ -1,5 +1,5 @@
 ﻿#include "mainwindow.h"
-#include "database.h"
+#include "application.h"
 #include <QDebug>
 #include <QSettings>
 #include <QFileDialog>
@@ -11,7 +11,6 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     setMinimumSize(800, 600);
-    m_db = new Database(this);
     createActions();
     createMenus();
 }
@@ -28,7 +27,7 @@ void MainWindow::open()
     if (!filePath.isEmpty())
     {
         s.setValue("LastFilePath", filePath);
-        m_db->load(filePath);
+        app->db()->load(filePath);
         m_actSave->setEnabled(true);
         m_actSaveAs->setEnabled(true);
     }
@@ -44,7 +43,7 @@ void MainWindow::save()
         if (filePath.isEmpty())
             return;
     }
-    m_db->save(filePath);
+    app->db()->save(filePath);
 }
 
 void MainWindow::saveAs()
@@ -55,7 +54,7 @@ void MainWindow::saveAs()
     if (!filePath.isEmpty())
     {
         s.setValue("LastFilePath", filePath);
-        m_db->save(filePath);
+        app->db()->save(filePath);
     }
 }
 

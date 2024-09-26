@@ -3,162 +3,109 @@
 #include <QJsonObject>
 #include <QDebug>
 
-// JournalEntry
-// ------------
-
-QJsonValue JournalEntry::save() const
-{
-    QJsonArray a;
-    a.append(QJsonValue(name));
-    a.append(QJsonValue(num));
-    a.append(QJsonValue(value));
-    return a;
-}
-
-void JournalEntry::load(const QJsonValue &json)
-{
-    QJsonArray a = json.toArray();
-    name = a[0].toString();
-    num = a[1].toInt();
-    value = a[2].toInt();
-}
-
-QJsonValue JournalEntry::saveArray(const QList<JournalEntry> &entries)
-{
-    QJsonArray a;
-    for (const auto& e : entries)
-    {
-        a.append(e.save());
-    }
-    return a;
-}
-
-QList<JournalEntry> JournalEntry::loadArray(const QJsonValue &json)
-{
-    QJsonArray a = json.toArray();
-    QList<JournalEntry> entries;
-    for (const auto i : a)
-    {
-        JournalEntry e;
-        e.load(i);
-        entries.push_back(e);
-    }
-    return entries;
-}
-
-// Journal
-// -------
-
-int Journal::value() const
-{
-    int v = 0;
-    for (const auto& e : entries)
-    {
-        v += e.value;
-    }
-    return v;
-}
-
-void Journal::addEntry(const QString &name, int num, int value)
-{
-    JournalEntry e;
-    e.name = name;
-    e.num = num;
-    e.value = value;
-    entries << e;
-}
-
-QJsonValue Journal::save() const
-{
-    QJsonArray a;
-    a.append(QJsonValue(timestamp.toSecsSinceEpoch()));
-    a.append(QJsonValue(title));
-    a.append(QJsonValue(isDebit));
-    a.append(JournalEntry::saveArray(entries));
-    return a;
-}
-
-void Journal::load(const QJsonValue &json)
-{
-    QJsonArray a = json.toArray();
-    timestamp = QDateTime::fromSecsSinceEpoch(a[0].toInteger());
-    title = a[1].toString();
-    isDebit = a[2].toBool();
-    entries = JournalEntry::loadArray(a[3]);
-}
-
-QJsonValue Journal::saveArray(const QList<Journal> &journals)
-{
-    QJsonArray a;
-    for (const auto& j : journals)
-    {
-        a.append(j.save());
-    }
-    return a;
-}
-
-QList<Journal> Journal::loadArray(const QJsonValue &json)
-{
-    QJsonArray a = json.toArray();
-    QList<Journal> journals;
-    for (const auto& i : a)
-    {
-        Journal j;
-        j.load(i);
-        journals.push_back(j);
-    }
-    return journals;
-}
-
-// Wallet
-// ------
-
 Wallet::Wallet(QObject *parent)
     : QObject{parent}
 {
 
 }
 
+void Wallet::addJournal(Journal *journal)
+{
+    if (!journal || m_journals.contains(journal))
+    {
+        return;
+    }
+    journal->setParent(this);
+    m_journals.append(journal);
+    emit journalAdded();
+    return;
+}
+
+int Wallet::transactionNum() const
+{
+    int n = 0;
+    for (const auto* journal : m_journals)
+    {
+        n += journal->entriesNum();
+    }
+    return n;
+}
+
+Transaction Wallet::transaction(int index) const
+{
+    int i = index;
+    for (const auto* journal : m_journals)
+    {
+        const int n = journal->entriesNum();
+        if (i < n)
+        {
+            Transaction tx;
+            tx.timestamp = journal->dateTime();
+            tx.name = journal->entryName(i);
+            if (journal->isDebit())
+            {
+                tx.debit = journal->entryValue(i);
+                tx.credit = 0;
+            }
+            else
+            {
+                tx.debit = 0;
+                tx.credit = journal->entryValue(i);
+            }
+            tx.desc = journal->title();
+            return tx;
+        }
+        else
+        {
+            i -= n;
+        }
+    }
+    return Transaction();
+}
+
+QJsonValue Wallet::save() const
+{
+    QJsonObject o;
+    o.insert("name", QJsonValue(m_name));
+    o.insert("value", QJsonValue(m_value));
+    QJsonArray a;
+    for (const auto* journal : m_journals)
+    {
+        a.append(journal->save());
+    }
+    o.insert("journals", a);
+    return o;
+}
+
+void Wallet::load(const QJsonValue &json)
+{
+    QJsonObject o = json.toObject();
+    m_name = o.value("name").toString();
+    m_value = o.value("value").toInt();
+    for (auto* journal : m_journals)
+    {
+        delete journal;
+    }
+    m_journals.clear();
+    QJsonArray a = o.value("journals").toArray();
+    for (const auto v : a)
+    {
+        auto* journal = new Journal();
+        journal->load(v);
+        m_journals.append(journal);
+    }
+    emit loaded();
+}
+
 void Wallet::setName(const QString& name)
 {
-    if (m_name != name)
-    {
+    if (m_name != name) {
         m_name = name;
         emit nameChanged(name);
     }
 }
 
-void Wallet::addJournal(const Journal& journal)
+void Wallet::setValue(int value)
 {
-    const int jval = journal.value();
-    if (jval <= 0)
-        return;
-    m_journals.push_back(journal);
-    if (journal.isDebit)
-    {
-        m_value += jval;
-    }
-    else
-    {
-        m_value -= jval;
-    }
-    emit journalAdded();
-}
-
-QJsonValue Wallet::save() const
-{
-    QJsonArray a;
-    a.append(QJsonValue(m_name));
-    a.append(QJsonValue(m_value));
-    a.append(Journal::saveArray(m_journals));
-    return a;
-}
-
-void Wallet::load(const QJsonValue& json)
-{
-    QJsonArray a = json.toArray();
-    m_name = a[0].toString();
-    m_value = a[1].toInt();
-    m_journals = Journal::loadArray(a[2]);
-    emit loaded();
+    m_value = value;
 }
