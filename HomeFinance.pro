@@ -9,14 +9,18 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    application.cpp \
     database.cpp \
+    journal.cpp \
     main.cpp \
     mainwindow.cpp \
     sqlite/sqlite3.c \
     wallet.cpp
 
 HEADERS += \
+    application.h \
     database.h \
+    journal.h \
     mainwindow.h \
     sqlite/sqlite3.h \
     sqlite/sqlite3ext.h \

@@ -3,37 +3,16 @@
 
 #include <QObject>
 #include <QJsonValue>
+#include "journal.h"
 
-struct JournalEntry
-{
-    QString name;
-    int num;
-    int value;
-
-    QJsonArray save() const;
-    void load(const QJsonArray &a);
-
-    static QJsonValue saveArray(const QList<JournalEntry>& entries);
-    static QList<JournalEntry> loadArray(const QJsonValue& json);
-};
-
-struct Journal
+struct Transaction
 {
     QDateTime timestamp;
-    QString title;
-    bool isDebit;
-    QList<JournalEntry> entries;
-
-    int value() const;
-    void addEntry(const QString& name, int num, int value);
-
-    QJsonValue save() const;
-    void load(const QJsonValue& json);
-
-    static QJsonValue saveArray(const QList<Journal>& journals);
-    static QList<Journal> loadArray(const QJsonValue& json);
+    QString name;
+    int debit;
+    int credit;
+    QString desc;
 };
-
 
 class Wallet : public QObject
 {
@@ -46,9 +25,12 @@ public:
 
     inline int value() const { return m_value; }
 
-    inline int journalNum() { return m_journals.size(); }
-    inline const Journal& journal(int index) { return m_journals.at(index); }
-    void addJournal(const Journal& journal);
+    inline int journalNum() const { return m_journals.size(); }
+    inline Journal* journal(int index) const;
+    void addJournal(Journal* journal);
+
+    int transactionNum() const;
+    Transaction transaction(int index);
 
     QJsonValue save() const;
     void load(const QJsonValue& json);
@@ -61,7 +43,7 @@ signals:
 private:
     QString m_name;
     int m_value = 0;
-    QList<Journal> m_journals;
+    QList<Journal*> m_journals;
 };
 
 #endif // WALLET_H
