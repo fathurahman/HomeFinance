@@ -21,7 +21,7 @@ public:
     explicit Wallet(QObject *parent = nullptr);
 
     inline const QString& name() const { return m_name; }
-    inline int value() const { return m_value; }
+    inline qint64 value() const { return m_value; }
 
     inline int journalNum() const { return m_journals.size(); }
     inline Journal* journal(int index) const;
@@ -35,7 +35,7 @@ public:
 
 public slots:
     void setName(const QString& name);
-    void setValue(int value);
+    void setValue(qint64 value);
 
 signals:    
     void loaded();
@@ -44,7 +44,7 @@ signals:
 
 private:
     QString m_name;
-    int m_value = 0;
+    qint64 m_value = 0;
     QList<Journal*> m_journals;
 };
 

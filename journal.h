@@ -9,7 +9,7 @@ struct JournalEntry
 {
     int id;
     int quantity;
-    int value;
+    qint64 value;
 
     QJsonValue save() const;
     void load(const QJsonValue& json);
@@ -27,12 +27,12 @@ public:
     inline bool isDebit() const { return m_isDebit; }
 
     inline int entriesNum() const { return m_entries.size(); }
-    int addEntry(const QString& name, int quantity, int value);
+    int addEntry(const QString& name, int quantity, qint64 value);
     QString entryName(int index) const;
     int entryQuantity(int index) const;
-    int entryValue(int index) const;
+    qint64 entryValue(int index) const;
 
-    int value() const;
+    qint64 value() const;
 
     QJsonValue save() const;
     void load(const QJsonValue& json);

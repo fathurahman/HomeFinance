@@ -81,7 +81,7 @@ void Wallet::load(const QJsonValue &json)
 {
     QJsonObject o = json.toObject();
     m_name = o.value("name").toString();
-    m_value = o.value("value").toInt();
+    m_value = o.value("value").toInteger();
     for (auto* journal : m_journals)
     {
         delete journal;
@@ -105,7 +105,7 @@ void Wallet::setName(const QString& name)
     }
 }
 
-void Wallet::setValue(int value)
+void Wallet::setValue(qint64 value)
 {
     m_value = value;
 }

@@ -9,7 +9,7 @@ Journal::Journal(QObject *parent)
 
 }
 
-int Journal::addEntry(const QString &name, int quantity, int value)
+int Journal::addEntry(const QString &name, int quantity, qint64 value)
 {
     JournalEntry e;
     e.id = app->db()->addJournalEntryName(name);
@@ -36,15 +36,15 @@ int Journal::entryQuantity(int index) const
     return e.quantity;
 }
 
-int Journal::entryValue(int index) const
+qint64 Journal::entryValue(int index) const
 {
     const auto& e = m_entries[index];
     return e.value;
 }
 
-int Journal::value() const
+qint64 Journal::value() const
 {
-    int v = 0;
+    qint64 v = 0;
     for (const auto& e : m_entries)
     {
         v += e.value;
@@ -151,5 +151,5 @@ void JournalEntry::load(const QJsonValue &json)
     QJsonArray a = json.toArray();
     id = a[0].toInt();
     quantity = a[1].toInt();
-    value = a[2].toInt();
+    value = a[2].toInteger();
 }

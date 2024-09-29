@@ -17,14 +17,21 @@ private:
     QAction* m_actSave;
     QAction* m_actSaveAs;
     QAction* m_actQuit;
+    QAction* m_actAddWallet;
+    QAction* m_actAddDebitJournal;
+    QAction* m_actAddCreditJournal;
 
     QMenu* m_fileMenu;
+    QMenu* m_databaseMenu;
 
 private slots:
     void open();
     void save();
     void saveAs();
     void quit();
+    void addWallet();
+    void addDebitJournal();
+    void addCreditJournal();
 
 private:
     void createActions();

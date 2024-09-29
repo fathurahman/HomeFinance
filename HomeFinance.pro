@@ -9,6 +9,8 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    addjournaldialog.cpp \
+    addwalletdialog.cpp \
     application.cpp \
     database.cpp \
     journal.cpp \
@@ -18,6 +20,8 @@ SOURCES += \
     wallet.cpp
 
 HEADERS += \
+    addjournaldialog.h \
+    addwalletdialog.h \
     application.h \
     database.h \
     journal.h \

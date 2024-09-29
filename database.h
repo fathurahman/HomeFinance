@@ -13,7 +13,8 @@ public:
 
     inline int walletsNum() const { return m_wallets.size(); }
     inline Wallet* wallet(int index) const { return m_wallets.at(index); }
-    Wallet* addWallet(const QString& name, int value);
+    int walletIndex(const QString& name) const;
+    Wallet* addWallet(const QString& name, qint64 value);
 
     inline const QStringList& journalEntryNames() const { return m_journalEntryNames; }
     int getJournalEntryId(const QString& name) const;

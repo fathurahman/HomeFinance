@@ -13,7 +13,21 @@ Database::Database(QObject *parent)
 
 }
 
-Wallet* Database::addWallet(const QString &name, int value)
+int Database::walletIndex(const QString &name) const
+{
+    const int n = m_wallets.size();
+    if (n > 0) {
+        for (int i = 0; i < n; ++i) {
+            const auto* w = m_wallets.at(i);
+            if (w->name() == name) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+Wallet* Database::addWallet(const QString &name, qint64 value)
 {
     Wallet* wallet = new Wallet(this);
     wallet->setName(name);
