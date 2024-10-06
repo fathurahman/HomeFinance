@@ -3,6 +3,7 @@
 #include <QFormLayout>
 #include <QPushButton>
 #include "application.h"
+#include "database.h"
 
 AddJournalDialog::AddJournalDialog(bool isDebit, QWidget *parent)
     : QDialog{parent}
@@ -52,10 +53,14 @@ AddJournalDialog::AddJournalDialog(bool isDebit, QWidget *parent)
     ui_title->setFocus();
 }
 
-Journal *AddJournalDialog::makeJournal() const
+Journal AddJournalDialog::journal() const
 {
-    return nullptr;
+    Journal j;
+    j.dateTime = ui_dateTime->dateTime();
+    return j;
 }
+
+
 
 void AddJournalDialog::addRow()
 {

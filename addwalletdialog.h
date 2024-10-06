@@ -3,6 +3,8 @@
 
 #include <QDialog>
 #include <QLineEdit>
+#include <QPushButton>
+#include "database.h"
 
 class AddWalletDialog : public QDialog
 {
@@ -10,14 +12,17 @@ class AddWalletDialog : public QDialog
 public:
     explicit AddWalletDialog(QWidget *parent = nullptr);
 
-    QString name() const { return ui_name->text(); }
-    qint64 value() const { return ui_value->text().toLongLong(); }
+    Wallet wallet() const;
 
-signals:
+signals:    
 
 private:
     QLineEdit* ui_name;
     QLineEdit* ui_value;
+    QPushButton* ui_addButton;
+
+private slots:
+    void onNameEdited(const QString& text);
 
 };
 

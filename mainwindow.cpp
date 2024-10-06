@@ -1,35 +1,45 @@
 ﻿#include "mainwindow.h"
-#include "application.h"
 #include <QDebug>
 #include <QSettings>
 #include <QFileDialog>
 #include <QApplication>
 #include <QMenuBar>
 #include <QToolBar>
+#include <QFile>
+#include "application.h"
+#include "database.h"
 #include "addwalletdialog.h"
 #include "addjournaldialog.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
+    updateWindowTitle();
     setMinimumSize(800, 600);
     createActions();
     createMenus();
+
 }
 
 MainWindow::~MainWindow()
 {
 }
 
+void MainWindow::updateWindowTitle()
+{
+    auto str = QString("Home Finance Rp. %1").arg(db->totalValue());
+    setWindowTitle(str);
+}
+
 void MainWindow::open()
 {
     QSettings s;
     QString filePath = s.value("LastFilePath", "").toString();
-    filePath = QFileDialog::getOpenFileName(this, "Open Database File", filePath, "JSON (*.json)");
+    filePath = QFileDialog::getOpenFileName(this, "Open Database File", filePath, "HFDB (*.hfdb)");
     if (!filePath.isEmpty())
     {
         s.setValue("LastFilePath", filePath);
-        app->db()->load(filePath);
+        db->load(filePath);
         m_actSave->setEnabled(true);
         m_actSaveAs->setEnabled(true);
     }
@@ -41,22 +51,22 @@ void MainWindow::save()
     QString filePath = s.value("LastFilePath", "").toString();
     if (filePath.isEmpty())
     {
-        filePath = QFileDialog::getSaveFileName(this, "Save Database File", "", "JSON (*.json)");
+        filePath = QFileDialog::getSaveFileName(this, "Save Database File", "", "HFDB (*.hfdb)");
         if (filePath.isEmpty())
             return;
     }
-    app->db()->save(filePath);
+    db->save(filePath);
 }
 
 void MainWindow::saveAs()
 {
     QSettings s;
     QString filePath = s.value("LastFilePath", "").toString();
-    filePath = QFileDialog::getSaveFileName(this, "Save Database File As", filePath, "JSON (*.json)");
+    filePath = QFileDialog::getSaveFileName(this, "Save Database File As", filePath, "HFDB (*.hfdb)");
     if (!filePath.isEmpty())
     {
         s.setValue("LastFilePath", filePath);
-        app->db()->save(filePath);
+        db->save(filePath);
     }
 }
 
@@ -68,18 +78,17 @@ void MainWindow::quit()
 void MainWindow::addWallet()
 {
     AddWalletDialog d(this);
-    if (d.exec())
-    {
-        qDebug() << "Add Wallet: " << d.name() << "Value:" << d.value();
+    if (d.exec()) {
+        db->wallets.append(d.wallet());
+        updateWindowTitle();
     }
 }
 
 void MainWindow::addDebitJournal()
 {
     AddJournalDialog d(true, this);
-    if (d.exec())
-    {
-        qDebug() << "Add Debit Journal";
+    if (d.exec()) {
+
     }
 }
 
@@ -119,16 +128,18 @@ void MainWindow::createActions()
     m_actAddWallet->setStatusTip("Add new wallet");
     connect(m_actAddWallet, &QAction::triggered, this, &MainWindow::addWallet);
 
+    const bool hasWallet = false; //app->db()->walletsNum() > 0;
+
     m_actAddDebitJournal = new QAction("Add &Debit Journal", this);
     m_actAddDebitJournal->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
     m_actAddDebitJournal->setStatusTip("Add debit journal to the current wallet");
-    m_actAddDebitJournal->setEnabled(false);
+    m_actAddDebitJournal->setEnabled(hasWallet);
     connect(m_actAddDebitJournal, &QAction::triggered, this, &MainWindow::addDebitJournal);
 
     m_actAddCreditJournal = new QAction("Add &Credit Journal", this);
     m_actAddCreditJournal->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
     m_actAddCreditJournal->setStatusTip("Add credit journal to the current wallet");
-    m_actAddCreditJournal->setEnabled(false);
+    m_actAddCreditJournal->setEnabled(hasWallet);
     connect(m_actAddCreditJournal, &QAction::triggered, this, &MainWindow::addCreditJournal);
 
 }

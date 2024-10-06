@@ -1,150 +1,171 @@
 ﻿#include <QDebug>
 #include <QFile>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonValue>
 #include "database.h"
+
+Database *db = nullptr;
+
+namespace db_utils {
+    bool readBool(QFile& file) {
+        char ch;
+        file.read(&ch, 1);
+        return ch != 0;
+    }
+
+    void writeBool(QFile& file, bool value) {
+        char ch = value ? 0 : 1;
+        file.write(&ch, 1);
+    }
+
+    int readInt(QFile& file) {
+        int val;
+        file.read((char*)&val, sizeof(int));
+        return val;
+    }
+
+    void writeInt(QFile& file, int value) {
+        file.write((char*)&value, sizeof(value));
+    }
+
+    qint64 readValue(QFile& file)
+    {
+        qint64 val;
+        file.read((char*)&val, sizeof(val));
+        return val;
+    }
+
+    void writeValue(QFile& file, qint64 value) {
+        file.write((char*)&value, sizeof(value));
+    }
+
+    QString readString(QFile& file)
+    {
+        static char buffer[1024];
+        quint16 len;
+        file.read((char*)&len, sizeof(len));
+        file.read(buffer, len);
+        buffer[len] = 0;
+        return QString(buffer);
+    }
+
+    void writeString(QFile& file, const QString& str) {
+        QByteArray a = str.toUtf8();
+        quint16 len = (quint16)a.size();
+        file.write((char*)&len, sizeof(len));
+        file.write(a);
+    }
+
+} // namespace db_utils
+using namespace db_utils;
 
 
 Database::Database(QObject *parent)
     : QObject{parent}
 {
-
+    db = this;
 }
 
-int Database::walletIndex(const QString &name) const
+qint64 Database::totalValue() const
 {
-    const int n = m_wallets.size();
-    if (n > 0) {
-        for (int i = 0; i < n; ++i) {
-            const auto* w = m_wallets.at(i);
-            if (w->name() == name) {
-                return i;
-            }
-        }
+    qint64 value = 0;
+    for (const auto& w : wallets) {
+        value += w.value;
     }
-    return -1;
+    return value;
 }
-
-Wallet* Database::addWallet(const QString &name, qint64 value)
-{
-    Wallet* wallet = new Wallet(this);
-    wallet->setName(name);
-    wallet->setValue(value);
-    m_wallets.append(wallet);
-    return wallet;
-}
-
-int Database::getJournalEntryId(const QString &name) const
-{
-    if (name.isEmpty())
-    {
-        return -1;
-    }
-    return m_journalEntryNames.indexOf(name);
-}
-
-QString Database::getJournalEntryName(int id) const
-{
-    if (id < 0)
-    {
-        return QString();
-    }
-    return m_journalEntryNames[id];
-}
-
-int Database::addJournalEntryName(const QString &name)
-{
-    int id = getJournalEntryId(name);
-    if (id < 0)
-    {
-        id = m_journalEntryNames.size();
-        m_journalEntryNames.append(name);
-    }
-    return id;
-}
-
 
 bool Database::load(const QString& path)
 {
+    int num;
+
     QFile file(path);
-    if (!file.open(QIODevice::ReadOnly))
-    {
+    if (file.open(QIODevice::ReadOnly) == false) {
+        qDebug() << "ERROR: can not open file for reading:" << path;
         return false;
     }
+
     emit loading();
-    auto json   = file.readAll();
-    auto doc    = QJsonDocument::fromJson(json);
-    auto o      = doc.object();
-    loadJournalEntryNames(o.value("names"));
-    loadWallets(o.value("wallets"));
+
+    num = readInt(file);
+    wallets.resize(num);
+    for (int i = 0; i < num; ++i) {
+        Wallet& wallet = wallets[i];
+        wallet.name = readString(file);
+        wallet.value = readValue(file);
+    }
+
+    num = readInt(file);
+    itemNames.resize(num);
+    for (int i = 0; i < num; ++i) {
+        itemNames[i] = readString(file);
+    }
+
+    num = readInt(file);
+    locationNames.resize(num);
+    for (int i = 0; i < num; ++i) {
+        locationNames[i] = readString(file);
+    }
+
+    num = readInt(file);
+    journals.resize(num);
+    for (int i = 0; i < num; ++i) {
+        Journal& j = journals[i];
+        j.dateTime = QDateTime::fromSecsSinceEpoch(readValue(file));
+        j.location = readInt(file);
+        j.wallet = readInt(file);
+        j.isDebit = readBool(file);
+        int en = readInt(file);
+        j.entries.resize(en);
+        for (int ei = 0;  ei <  en; ++ei) {
+            JournalEntry& e = j.entries[ei];
+            e.item = readInt(file);
+            e.num = readInt(file);
+            e.value = readValue(file);
+        }
+    }
+
     emit loaded();
+
     return true;
 }
 
-bool Database::save(const QString& path) const
+bool Database::save(const QString &path) const
 {
     QFile file(path);
-    if (!file.open(QIODevice::WriteOnly))
-    {
+    if (file.open(QIODevice::WriteOnly) == false) {
+        qDebug() << "ERROR: can not open file for writing : " << path;
         return false;
     }
-    QJsonObject o;
-    o.insert("names", saveJournalEntryNames());
-    o.insert("wallets", saveWallets());
-    QJsonDocument doc(o);
-    auto json = doc.toJson(QJsonDocument::Compact);
-    file.write(json);
+
+    writeInt(file, wallets.size());
+    for (const auto& wallet : wallets) {
+        writeString(file, wallet.name);
+        writeValue(file, wallet.value);
+    }
+
+    writeInt(file, itemNames.size());
+    for (const auto& name : itemNames) {
+        writeString(file, name);
+    }
+
+    writeInt(file, locationNames.size());
+    for (const auto& name : locationNames) {
+        writeString(file, name);
+    }
+
+    writeInt(file, journals.size());
+    for (const auto& j: journals) {
+        writeValue(file, j.dateTime.toSecsSinceEpoch());
+        writeInt(file, j.location);
+        writeInt(file, j.wallet);
+        writeBool(file, j.isDebit);
+        writeInt(file, j.entries.size());
+        for (const auto& e : j.entries) {
+            writeInt(file, e.item);
+            writeInt(file, e.num);
+            writeValue(file, e.value);
+        }
+    }
+
     return true;
 }
-
-void Database::loadJournalEntryNames(const QJsonValue &json)
-{
-    m_journalEntryNames.clear();
-    QJsonArray a = json.toArray();
-    for (const auto& v : a)
-    {
-        const QString name = v.toString();
-        m_journalEntryNames.append(name);
-    }
-}
-
-void Database::loadWallets(const QJsonValue &json)
-{
-    for (auto* wallet : m_wallets)
-    {
-        delete wallet;
-    }
-    m_wallets.clear();
-    QJsonArray a = json.toArray();
-    for (const auto& v : a)
-    {
-        auto* w = new Wallet(this);
-        w->load(v);
-        m_wallets.append(w);
-    }
-}
-
-QJsonValue Database::saveJournalEntryNames() const
-{
-    QJsonArray a;
-    for (const auto& name : m_journalEntryNames)
-    {
-        a.append(QJsonValue(name));
-    }
-    return a;
-}
-
-QJsonValue Database::saveWallets() const
-{
-    QJsonArray a;
-    for (const auto* w : m_wallets)
-    {
-        a.append(w->save());
-    }
-    return a;
-}
-
-
 

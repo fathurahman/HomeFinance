@@ -25,6 +25,7 @@ private:
     QMenu* m_databaseMenu;
 
 private slots:
+    void updateWindowTitle();
     void open();
     void save();
     void saveAs();

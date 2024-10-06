@@ -13,22 +13,15 @@ SOURCES += \
     addwalletdialog.cpp \
     application.cpp \
     database.cpp \
-    journal.cpp \
     main.cpp \
-    mainwindow.cpp \
-    sqlite/sqlite3.c \
-    wallet.cpp
+    mainwindow.cpp
 
 HEADERS += \
     addjournaldialog.h \
     addwalletdialog.h \
     application.h \
     database.h \
-    journal.h \
-    mainwindow.h \
-    sqlite/sqlite3.h \
-    sqlite/sqlite3ext.h \
-    wallet.h
+    mainwindow.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
