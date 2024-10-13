@@ -14,14 +14,16 @@ SOURCES += \
     application.cpp \
     database.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    transactiontablemodel.cpp
 
 HEADERS += \
     addjournaldialog.h \
     addwalletdialog.h \
     application.h \
     database.h \
-    mainwindow.h
+    mainwindow.h \
+    transactiontablemodel.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

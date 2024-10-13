@@ -12,29 +12,20 @@ AddJournalDialog::AddJournalDialog(bool isDebit, QWidget *parent)
     setWindowTitle(QString("Add %1 Journal").arg(isDebit ? "Debit" : "Credit"));
     setMinimumSize(480, 800);
 
-    if (db->itemNames.size() > 0) {
-        m_itemNameCompleter = new QCompleter(db->itemNames, this);
-    }
-    else {
-        m_itemNameCompleter = nullptr;
-    }
+    m_itemNameCompleter = db->createItemNameCompleter(this);
 
     ui_dateTime = new QDateTimeEdit(QDateTime::currentDateTime());
 
     ui_wallet = new QComboBox();
-    if (db->walletDataList.size() == 0) {
+    if (db->hasAnyWallet() == false) {
         ui_wallet->setCurrentText("New Wallet");
     }
     else {
-       for (const auto& w : db->walletDataList) {
-           ui_wallet->addItem(w.name);
-       }
-       if (db->activeWallet < 0) {
-           ui_wallet->setCurrentIndex(0);
-       }
-       else {
-           ui_wallet->setCurrentIndex(db->activeWallet);
-       }
+        const auto names = db->walletNames();
+        for (const auto& name : names) {
+            ui_wallet->addItem(name);
+        }
+        ui_wallet->setCurrentIndex(db->activeWallet());
     }
     ui_wallet->setEditable(true);
 
@@ -44,15 +35,12 @@ AddJournalDialog::AddJournalDialog(bool isDebit, QWidget *parent)
     ui_type->setCurrentIndex(isDebit ? 0 : 1);
 
     ui_location = new QLineEdit();
-    if (db->locationNames.size() > 0) {
-        QCompleter* c = new QCompleter(db->locationNames, this);
-        ui_location->setCompleter(c);
-    }
+    ui_location->setCompleter(db->createLocationNameCompleter(this));
 
     auto* form = new QFormLayout;
     form->addRow("DateTime:", ui_dateTime);
-    form->addRow("Wallet:", ui_wallet);
     form->addRow("Type:", ui_type);
+    form->addRow("Wallet:", ui_wallet);
     form->addRow("Location:", ui_location);
 
 
@@ -82,7 +70,7 @@ AddJournalDialog::AddJournalDialog(bool isDebit, QWidget *parent)
     layout->addLayout(buttons);
     setLayout(layout);
 
-    ui_location->setFocus();
+    ui_wallet->setFocus();
 }
 
 
@@ -116,9 +104,7 @@ void AddJournalDialog::addRow()
     JournalRow row;
 
     row.name = new QLineEdit;
-    if (m_itemNameCompleter) {
-        row.name->setCompleter(m_itemNameCompleter);
-    }
+    row.name->setCompleter(m_itemNameCompleter);
 
     row.quantity = new QSpinBox;
     row.quantity->setRange(1, 9990);

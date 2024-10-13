@@ -52,23 +52,12 @@ WalletData AddWalletDialog::walletData() const
 
 void AddWalletDialog::onNameEdited(const QString &text)
 {
-    bool valid = true;
-    if (text.isEmpty()) {
-        valid = false;
-    }
-    else {
-        for (const auto& w : db->walletDataList) {
-            if (w.name == text) {
-                valid = false;
-                break;
-            }
-        }
-    }
-    if (valid) {
-        ui_name->setStyleSheet("background-color: white");
-    }
-    else {
+    if (text.isEmpty() || db->hasWalletWithName(text)) {
+        ui_addButton->setEnabled(false);
         ui_name->setStyleSheet("background-color: red");
     }
-    ui_addButton->setEnabled(valid);
+    else {
+        ui_addButton->setEnabled(true);
+        ui_name->setStyleSheet("background-color: white");
+    }
 }

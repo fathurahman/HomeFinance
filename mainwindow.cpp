@@ -6,18 +6,28 @@
 #include <QMenuBar>
 #include <QToolBar>
 #include <QFile>
+#include <QTableView>
 #include "application.h"
 #include "database.h"
 #include "addwalletdialog.h"
 #include "addjournaldialog.h"
+#include "transactiontablemodel.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     updateWindowTitle();
-    setMinimumSize(800, 600);
+    setMinimumSize(1024, 768);
     createActions();
     createMenus();
+
+    connect(db, &Database::totalValueChanged, this, &MainWindow::updateWindowTitle);
+
+    auto* model = new TransactionTableModel(this);
+    auto* view = new QTableView();
+    view->setModel(model);
+    setCentralWidget(view);
+    view->setColumnWidth(0, 140);
 
 }
 
@@ -79,11 +89,7 @@ void MainWindow::addWallet()
 {
     AddWalletDialog d(this);
     if (d.exec()) {
-        db->walletDataList.append(d.walletData());
-        db->activeWallet = db->walletDataList.size() - 1;
-        updateWindowTitle();
-        m_actAddDebitJournal->setEnabled(true);
-        m_actAddCreditJournal->setEnabled(true);
+        db->addWallet(d.walletData());
     }
 }
 
@@ -93,7 +99,7 @@ void MainWindow::addDebitJournal()
     if (d.exec()) {
         auto j = d.journalData();
         if (j.entryDataList.size() > 0) {
-            db->journalDataList.append(d.journalData());
+            db->addJournal(j);
         }
     }
 }
@@ -103,7 +109,10 @@ void MainWindow::addCreditJournal()
     AddJournalDialog d(false, this);
     if (d.exec())
     {
-        db->journalDataList.append(d.journalData());
+        auto j = d.journalData();
+        if (j.entryDataList.size() > 0) {
+            db->addJournal(j);
+        }
     }
 }
 
@@ -134,18 +143,15 @@ void MainWindow::createActions()
     m_actAddWallet->setStatusTip("Add new wallet");
     connect(m_actAddWallet, &QAction::triggered, this, &MainWindow::addWallet);
 
-    const bool hasWallet = db->walletDataList.size() > 0;
 
     m_actAddDebitJournal = new QAction("Add &Debit Journal", this);
     m_actAddDebitJournal->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
     m_actAddDebitJournal->setStatusTip("Add debit journal to the current wallet");
-    m_actAddDebitJournal->setEnabled(hasWallet);
     connect(m_actAddDebitJournal, &QAction::triggered, this, &MainWindow::addDebitJournal);
 
     m_actAddCreditJournal = new QAction("Add &Credit Journal", this);
     m_actAddCreditJournal->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
     m_actAddCreditJournal->setStatusTip("Add credit journal to the current wallet");
-    m_actAddCreditJournal->setEnabled(hasWallet);
     connect(m_actAddCreditJournal, &QAction::triggered, this, &MainWindow::addCreditJournal);
 
 }
