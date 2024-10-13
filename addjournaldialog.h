@@ -8,6 +8,7 @@
 #include <QVBoxLayout>
 #include <QDateTimeEdit>
 #include <QComboBox>
+#include <QCompleter>
 #include "database.h"
 
 struct JournalRow
@@ -23,18 +24,19 @@ class AddJournalDialog : public QDialog
 public:
     explicit AddJournalDialog(bool isDebit, QWidget *parent = nullptr);
 
-    Journal journal() const;
+    JournalData journalData() const;
 
 signals:
 
 private:
-    bool m_isDebit;
     QDateTimeEdit* ui_dateTime;
+    QLineEdit* ui_location;
     QComboBox* ui_wallet;
     QComboBox* ui_type;
-    QLineEdit* ui_title;
     QVBoxLayout* ui_rowBox;
     QList<JournalRow> ui_rows;
+
+    QCompleter* m_itemNameCompleter;
 
 private:
     void addRow();

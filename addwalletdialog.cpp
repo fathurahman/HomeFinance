@@ -42,9 +42,9 @@ AddWalletDialog::AddWalletDialog(QWidget *parent)
     setLayout(layout);
 }
 
-Wallet AddWalletDialog::wallet() const
+WalletData AddWalletDialog::walletData() const
 {
-    Wallet w;
+    WalletData w;
     w.name = ui_name->text();
     w.value = ui_value->text().toLongLong();
     return w;
@@ -57,7 +57,7 @@ void AddWalletDialog::onNameEdited(const QString &text)
         valid = false;
     }
     else {
-        for (const auto& w : db->wallets) {
+        for (const auto& w : db->walletDataList) {
             if (w.name == text) {
                 valid = false;
                 break;

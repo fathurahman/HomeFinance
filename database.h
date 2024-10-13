@@ -5,26 +5,26 @@
 #include <QStringList>
 #include <QDateTime>
 
-struct Wallet
+struct WalletData
 {
     QString name;
     qint64 value;
 };
 
-struct JournalEntry
+struct JournalEntryData
 {
     int item;
     int num;
     qint64 value;
 };
 
-struct Journal
+struct JournalData
 {
     QDateTime dateTime;
     int location;
     int wallet;
     bool isDebit;
-    QList<JournalEntry> entries;
+    QList<JournalEntryData> entryDataList;
 };
 
 struct Transaction
@@ -43,15 +43,23 @@ class Database : public QObject
     Q_OBJECT
 public:
 
-    QList<Wallet> wallets;
+    QList<WalletData> walletDataList;
+    QList<JournalData> journalDataList;
     QStringList itemNames;
     QStringList locationNames;
-    QList<Journal> journals;
+
+    int activeWallet = -1;
 
 public:
     explicit Database(QObject *parent = nullptr);
 
-    qint64 totalValue() const;
+    int getOrAddWallet(const QString& name);
+
+    int getOrAddLocation(const QString& name);
+
+    int getOrAddItem(const QString& name);
+
+    qint64 totalValue() const;        
 
     bool load(const QString& path);
     bool save(const QString& path) const;

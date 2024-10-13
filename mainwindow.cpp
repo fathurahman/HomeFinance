@@ -79,8 +79,11 @@ void MainWindow::addWallet()
 {
     AddWalletDialog d(this);
     if (d.exec()) {
-        db->wallets.append(d.wallet());
+        db->walletDataList.append(d.walletData());
+        db->activeWallet = db->walletDataList.size() - 1;
         updateWindowTitle();
+        m_actAddDebitJournal->setEnabled(true);
+        m_actAddCreditJournal->setEnabled(true);
     }
 }
 
@@ -88,7 +91,10 @@ void MainWindow::addDebitJournal()
 {
     AddJournalDialog d(true, this);
     if (d.exec()) {
-
+        auto j = d.journalData();
+        if (j.entryDataList.size() > 0) {
+            db->journalDataList.append(d.journalData());
+        }
     }
 }
 
@@ -97,7 +103,7 @@ void MainWindow::addCreditJournal()
     AddJournalDialog d(false, this);
     if (d.exec())
     {
-        qDebug() << "Add Credit Journal";
+        db->journalDataList.append(d.journalData());
     }
 }
 
@@ -128,7 +134,7 @@ void MainWindow::createActions()
     m_actAddWallet->setStatusTip("Add new wallet");
     connect(m_actAddWallet, &QAction::triggered, this, &MainWindow::addWallet);
 
-    const bool hasWallet = false; //app->db()->walletsNum() > 0;
+    const bool hasWallet = db->walletDataList.size() > 0;
 
     m_actAddDebitJournal = new QAction("Add &Debit Journal", this);
     m_actAddDebitJournal->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));

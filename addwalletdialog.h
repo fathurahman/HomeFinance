@@ -12,7 +12,7 @@ class AddWalletDialog : public QDialog
 public:
     explicit AddWalletDialog(QWidget *parent = nullptr);
 
-    Wallet wallet() const;
+    WalletData walletData() const;
 
 signals:    
 

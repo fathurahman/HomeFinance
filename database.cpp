@@ -64,10 +64,58 @@ Database::Database(QObject *parent)
     db = this;
 }
 
+int Database::getOrAddWallet(const QString &name)
+{
+    if (name.isEmpty()) {
+        return -1;
+    }
+    const int n = walletDataList.size();
+    for (int i = 0; i < n; ++i) {
+        if (walletDataList[i].name == name) {
+            return i;
+        }
+    }
+    WalletData w;
+    w.name = name;
+    w.value = 0;
+    walletDataList.append(w);
+    return n;
+}
+
+int Database::getOrAddLocation(const QString& name)
+{
+    if (name.isEmpty()) {
+        return -1;
+    }
+    const int n = locationNames.size();
+    for (int i = 0; i < n; ++i) {
+        if (locationNames[i] == name) {
+            return i;
+        }
+    }
+    locationNames.append(name);
+    return n;
+}
+
+int Database::getOrAddItem(const QString& name)
+{
+    if (name.isEmpty()) {
+        return -1;
+    }
+    const int n = itemNames.size();
+    for (int i = 0; i < n; ++i) {
+        if (itemNames[i] == name) {
+            return i;
+        }
+    }
+    itemNames.append(name);
+    return n;
+}
+
 qint64 Database::totalValue() const
 {
     qint64 value = 0;
-    for (const auto& w : wallets) {
+    for (const auto& w : walletDataList) {
         value += w.value;
     }
     return value;
@@ -86,9 +134,9 @@ bool Database::load(const QString& path)
     emit loading();
 
     num = readInt(file);
-    wallets.resize(num);
+    walletDataList.resize(num);
     for (int i = 0; i < num; ++i) {
-        Wallet& wallet = wallets[i];
+        WalletData& wallet = walletDataList[i];
         wallet.name = readString(file);
         wallet.value = readValue(file);
     }
@@ -106,17 +154,17 @@ bool Database::load(const QString& path)
     }
 
     num = readInt(file);
-    journals.resize(num);
+    journalDataList.resize(num);
     for (int i = 0; i < num; ++i) {
-        Journal& j = journals[i];
+        JournalData& j = journalDataList[i];
         j.dateTime = QDateTime::fromSecsSinceEpoch(readValue(file));
         j.location = readInt(file);
         j.wallet = readInt(file);
         j.isDebit = readBool(file);
         int en = readInt(file);
-        j.entries.resize(en);
+        j.entryDataList.resize(en);
         for (int ei = 0;  ei <  en; ++ei) {
-            JournalEntry& e = j.entries[ei];
+            auto& e = j.entryDataList[ei];
             e.item = readInt(file);
             e.num = readInt(file);
             e.value = readValue(file);
@@ -136,10 +184,10 @@ bool Database::save(const QString &path) const
         return false;
     }
 
-    writeInt(file, wallets.size());
-    for (const auto& wallet : wallets) {
-        writeString(file, wallet.name);
-        writeValue(file, wallet.value);
+    writeInt(file, walletDataList.size());
+    for (const auto& w : walletDataList) {
+        writeString(file, w.name);
+        writeValue(file, w.value);
     }
 
     writeInt(file, itemNames.size());
@@ -152,14 +200,14 @@ bool Database::save(const QString &path) const
         writeString(file, name);
     }
 
-    writeInt(file, journals.size());
-    for (const auto& j: journals) {
+    writeInt(file, journalDataList.size());
+    for (const auto& j: journalDataList) {
         writeValue(file, j.dateTime.toSecsSinceEpoch());
         writeInt(file, j.location);
         writeInt(file, j.wallet);
         writeBool(file, j.isDebit);
-        writeInt(file, j.entries.size());
-        for (const auto& e : j.entries) {
+        writeInt(file, j.entryDataList.size());
+        for (const auto& e : j.entryDataList) {
             writeInt(file, e.item);
             writeInt(file, e.num);
             writeValue(file, e.value);
