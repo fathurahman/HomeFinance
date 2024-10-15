@@ -7,6 +7,7 @@
 #include <QToolBar>
 #include <QFile>
 #include <QTableView>
+#include <QCloseEvent>
 #include "application.h"
 #include "database.h"
 #include "addwalletdialog.h"
@@ -35,6 +36,13 @@ MainWindow::~MainWindow()
 {
 }
 
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    // TODO: peringatan kalau belum save cuy
+    qDebug() << "BYE BYE BLEH" << db->isModified();
+    event->accept();
+}
+
 void MainWindow::updateWindowTitle()
 {
     auto str = QString("Home Finance Rp. %1").arg(db->totalValue());
@@ -57,26 +65,36 @@ void MainWindow::open()
 
 void MainWindow::save()
 {
-    QSettings s;
-    QString filePath = s.value("LastFilePath", "").toString();
-    if (filePath.isEmpty())
+    QString path = db->lastFilePath();
+    if (path.isEmpty())
     {
-        filePath = QFileDialog::getSaveFileName(this, "Save Database File", "", "HFDB (*.hfdb)");
-        if (filePath.isEmpty())
-            return;
+        path = QFileDialog::getSaveFileName(this, "Save Database File", "", "HFDB (*.hfdb)");
+        if (false == path.isEmpty())
+        {
+            db->save(path);
+            QSettings s;
+            s.setValue("LastFilePath", path);
+            s.sync();
+        }
     }
-    db->save(filePath);
+    else
+    {
+        db->save(path);
+    }
 }
 
 void MainWindow::saveAs()
 {
-    QSettings s;
-    QString filePath = s.value("LastFilePath", "").toString();
-    filePath = QFileDialog::getSaveFileName(this, "Save Database File As", filePath, "HFDB (*.hfdb)");
-    if (!filePath.isEmpty())
+    QString path = db->lastFilePath();
+    path = QFileDialog::getSaveFileName(this, "Save Database File As", path, "HFDB (*.hfdb)");
+    if (false == path.isEmpty())
     {
-        s.setValue("LastFilePath", filePath);
-        db->save(filePath);
+        if (db->save(path))
+        {
+            QSettings s;
+            s.setValue("LastFilePath", path);
+            s.sync();
+        }
     }
 }
 
@@ -88,7 +106,8 @@ void MainWindow::quit()
 void MainWindow::addWallet()
 {
     AddWalletDialog d(this);
-    if (d.exec()) {
+    if (d.exec())
+    {
         db->addWallet(d.walletData());
     }
 }
@@ -96,9 +115,11 @@ void MainWindow::addWallet()
 void MainWindow::addDebitJournal()
 {
     AddJournalDialog d(true, this);
-    if (d.exec()) {
+    if (d.exec())
+    {
         auto j = d.journalData();
-        if (j.entryDataList.size() > 0) {
+        if (j.entryDataList.size() > 0)
+        {
             db->addJournal(j);
         }
     }
@@ -110,7 +131,8 @@ void MainWindow::addCreditJournal()
     if (d.exec())
     {
         auto j = d.journalData();
-        if (j.entryDataList.size() > 0) {
+        if (j.entryDataList.size() > 0)
+        {
             db->addJournal(j);
         }
     }

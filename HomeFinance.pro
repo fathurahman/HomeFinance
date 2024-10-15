@@ -13,6 +13,7 @@ SOURCES += \
     addwalletdialog.cpp \
     application.cpp \
     database.cpp \
+    databasefile.cpp \
     main.cpp \
     mainwindow.cpp \
     transactiontablemodel.cpp
@@ -22,6 +23,7 @@ HEADERS += \
     addwalletdialog.h \
     application.h \
     database.h \
+    databasefile.h \
     mainwindow.h \
     transactiontablemodel.h
 

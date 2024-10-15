@@ -24,6 +24,9 @@ private:
     QMenu* m_fileMenu;
     QMenu* m_databaseMenu;
 
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
 private slots:
     void updateWindowTitle();
     void open();

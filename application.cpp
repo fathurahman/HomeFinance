@@ -11,10 +11,15 @@ Application::Application(int &argc, char **argv)
 {    
     app = this;
 
+    QApplication::setOrganizationName("Hacknpaint");
+    QApplication::setApplicationName("HomeFinance");
+    QApplication::setApplicationVersion("1.0.0");
+
     m_db = new Database(this);
     QSettings s;
     QString path = s.value("LastFilePath", "").toString();
-    if (path.isEmpty() == false && path.endsWith(".hfdb")) {
+    if (path.isEmpty() == false && path.endsWith(".hfdb"))
+    {
         m_db->load(path);
     }
 
