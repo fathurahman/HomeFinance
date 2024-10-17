@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QFile>
+#include "datatypes.h"
 
 class DatabaseFile : public QObject
 {
@@ -23,6 +24,16 @@ public:
 
     QString readString();
     void writeString(const QString& str);
+
+    void writeWallets(const QList<Wallet>& wallets);
+    void readWallets(QList<Wallet>& wallets);
+
+    void writeNameAndTags(const QList<NameAndTags>& arr);
+    void readNameAndTags(QList<NameAndTags>& arr);
+
+    void writeJournals(const QList<Journal>& journals);
+    void readJournals(QList<Journal>& journals);
+
 
 private:
     QFile file;

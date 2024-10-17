@@ -65,3 +65,84 @@ void DatabaseFile::writeString(const QString& str)
     file.write((char*)&len, sizeof(len));
     file.write(a);
 }
+
+void DatabaseFile::writeWallets(const QList<Wallet> &wallets)
+{
+    writeInt(int(wallets.size()));
+    for (const auto& wallet : wallets)
+    {
+        writeString(wallet.name);
+        writeValue(wallet.value);
+    }
+}
+
+void DatabaseFile::readWallets(QList<Wallet> &wallets)
+{
+    wallets.resize(readInt());
+    for (auto& wallet : wallets)
+    {
+        wallet.name = readString();
+        wallet.value = readValue();
+    }
+}
+
+void DatabaseFile::writeNameAndTags(const QList<NameAndTags> &arr)
+{
+    writeInt(int(arr.size()));
+    for (const auto& it : iarr)
+    {
+        writeString(it.name);
+        writeInt(int(it.tags.size()));
+        for (const int tag : it.tags)
+        {
+            writeInt(tag);
+        }
+    }
+}
+
+void DatabaseFile::readNameAndTags(QList<NameAndTags> &arr)
+{
+    arr.resize(readInt());
+    for (auto& it: arr)
+    {
+        it.name = readString();
+        it.tags.resize(readInt());
+        for (auto& tag : it.tags)
+        {
+            tag = readInt();
+        }
+    }
+}
+
+void DatabaseFile::writeJournals(const QList<Journal> &journals)
+{
+    writeInt(int(journals.size()));
+    for (const auto& journal : journals)
+    {
+        writeInt(journal.date.toJulianDay());
+        writeInt(journal.locationIndex);
+        writeInt(journal.walletIndex);
+        writeBool(journal.isDebit);
+        writeInt(int(journal.entries.size()));
+        for (const auto& entry : journal.entries)
+        {
+           writeInt(entry.itemIndex);
+           writeInt(entry.num);
+           writeInt(entry.value);
+        }
+    }
+}
+
+void DatabaseFile::readJournals(QList<Journal> &journals)
+{
+    int num = readInt();
+    journals.resize(num);
+    for (auto& journal : journals)
+    {
+        journal.date = QDate::fromJulianDay(readValue());
+        journal.locationIndex = readInt();
+        journal.walletIndex = readInt();
+        journal.isDebit = readBool();
+        num = journal.readInt();
+    }
+}

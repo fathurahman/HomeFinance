@@ -24,6 +24,7 @@ HEADERS += \
     application.h \
     database.h \
     databasefile.h \
+    datatypes.h \
     mainwindow.h \
     transactiontablemodel.h
 
