@@ -86,30 +86,30 @@ void DatabaseFile::readWallets(QList<Wallet> &wallets)
     }
 }
 
-void DatabaseFile::writeNameAndTags(const QList<NameAndTags> &arr)
+void DatabaseFile::writeTaggedNames(const QList<TaggedName> &arr)
 {
     writeInt(int(arr.size()));
     for (const auto& it : iarr)
     {
         writeString(it.name);
-        writeInt(int(it.tags.size()));
-        for (const int tag : it.tags)
+        writeInt(int(it.tagIndices.size()));
+        for (const int i : it.tagIndices)
         {
-            writeInt(tag);
+            writeInt(i);
         }
     }
 }
 
-void DatabaseFile::readNameAndTags(QList<NameAndTags> &arr)
+void DatabaseFile::readTaggedNames(QList<TaggedName> &arr)
 {
     arr.resize(readInt());
     for (auto& it: arr)
     {
         it.name = readString();
-        it.tags.resize(readInt());
-        for (auto& tag : it.tags)
+        it.tagIndices.resize(readInt());
+        for (auto& i : it.tagIndices)
         {
-            tag = readInt();
+            i = readInt();
         }
     }
 }
@@ -128,7 +128,7 @@ void DatabaseFile::writeJournals(const QList<Journal> &journals)
         {
            writeInt(entry.itemIndex);
            writeInt(entry.num);
-           writeInt(entry.value);
+           writeValue(entry.value);
         }
     }
 }
@@ -143,6 +143,33 @@ void DatabaseFile::readJournals(QList<Journal> &journals)
         journal.locationIndex = readInt();
         journal.walletIndex = readInt();
         journal.isDebit = readBool();
-        num = journal.readInt();
+        journal.entries.resize(readInt());
+        for (auto& entry : journal.entries)
+        {
+            entry.itemIndex = readInt();
+            entry.num = readInt();
+            entry.value = readValue();
+        }
+
+
+    }
+}
+
+
+void DatabaseFile::writeStringList(const QStringList& list)
+{
+    writeInt(int(list.size()));
+    for (const auto& it : list)
+    {
+        writeString(it);
+    }
+}
+
+void DatabaseFile::readStringList(QStringList& list)
+{
+    list.resize(readInt());
+    for (auto& it : list)
+    {
+        it = readString();
     }
 }

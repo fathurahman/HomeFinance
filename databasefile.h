@@ -28,11 +28,14 @@ public:
     void writeWallets(const QList<Wallet>& wallets);
     void readWallets(QList<Wallet>& wallets);
 
-    void writeNameAndTags(const QList<NameAndTags>& arr);
-    void readNameAndTags(QList<NameAndTags>& arr);
+    void writeTaggedNames(const QList<TaggedName>& taggedNames);
+    void readTaggedNames(QList<TaggedName>& taggedNames);
 
     void writeJournals(const QList<Journal>& journals);
     void readJournals(QList<Journal>& journals);
+
+    void writeStringList(const QStringList& list);
+    void readStringList(QStringList& list);
 
 
 private:

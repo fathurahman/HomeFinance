@@ -8,19 +8,20 @@ struct Wallet
 {
     QString name;
     qint64 value;
+
+    Wallet() {}
+    Wallet(const QString& inName) : name(inName), value(0) {}
 };
 
-struct NameAndTags
+struct TaggedName
 {
     QString name;
-    QList<int> tags;
+    QList<int> tagIndices;
+
+    TaggedName() {}
+    TaggedName(const QString& inName) : name(inName) {}
 };
 
-struct Location
-{
-    QString name;
-    QList<int> tags;
-};
 
 struct JournalEntry
 {
@@ -30,6 +31,13 @@ struct JournalEntry
     qint64 balance;
 };
 
+struct JournalEntryForm
+{
+    QString itemName;
+    int num;
+    qint64 value;
+};
+
 struct Journal
 {
     QDate date;
@@ -37,6 +45,15 @@ struct Journal
     int walletIndex;
     bool isDebit;
     QList<JournalEntry> entries;
+};
+
+struct JournalForm
+{
+    QDate date;
+    QString locationName;
+    QString walletName;
+    bool isDebit;
+    QList<JournalEntryForm> entryForms;
 };
 
 struct Transaction
@@ -49,6 +66,9 @@ struct Transaction
     qint64 debit;
     qint64 credit;
     qint64 balance;
+
+    QString locationName() const;
+    QString itemName() const;
 };
 
 struct TransactionFilter
@@ -56,21 +76,28 @@ struct TransactionFilter
     int year = -1;
     int month = -1;
     int day = -1;
-    QString location;
-    int wallet = -1;
-    QString item;
+    QString locationName;
+    QString itemName;
+    QString tagName;
+    int walletIndex = -1;
+    int flow = 0;
 
-    bool hasLocation;
-    int specificLocation;
+    bool hasLocationName;
+    int locationIndex;
 
-    bool hasItem;
-    int specificItem;
+    bool hasItemName;
+    int itemIndex;
+
+    int tagIndex;
 };
 
 struct TransactionPointer
 {
     int journalIndex;
     int entryIndex;
+
+    TransactionPointer() {}
+    TransactionPointer(int ji, int ei) : journalIndex(ji), entryIndex(ei) {}
 };
 
 
