@@ -5,7 +5,7 @@
 #include <QPushButton>
 #include <QSpacerItem>
 #include "application.h"
-#include "datatypes.h"
+#include "database.h"
 
 AddWalletDialog::AddWalletDialog(QWidget *parent)
     : QDialog{parent}
@@ -48,7 +48,7 @@ Wallet AddWalletDialog::wallet() const
 
 void AddWalletDialog::onNameEdited(const QString &text)
 {
-    if (text.isEmpty() || db->hasWalletWithName(text))
+    if (text.isEmpty() || db->wallet(text) != nullptr)
 	{
         ui_addButton->setEnabled(false);
         ui_name->setStyleSheet("background-color: red");

@@ -26,6 +26,8 @@ public:
 
     const Wallet* wallet(int index) const;
 
+    const Wallet *wallet(const QString& name) const;
+
     bool addWallet(const Wallet& wallet);
 
     inline int activeWalletIndex() const { return m_activeWalletIndex; }

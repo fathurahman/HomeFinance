@@ -64,13 +64,13 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     const int col = index.column();
     switch(col) {
     case 0:
-        return t.dateTime;
+        return t.date;
     case 1:
-        return db->locationName(t.location);
+        return db->locationName(t.locationIndex);
     case 2:
-        return db->walletName(t.wallet);
+        return db->wallet(t.walletIndex)->name;
     case 3:
-        return db->itemName(t.item, t.num);
+        return db->itemName(t.itemIndex, t.num);
     case 4:
         return t.debit;
     case 5:

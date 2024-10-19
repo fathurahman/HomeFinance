@@ -18,7 +18,7 @@ Application::Application(int &argc, char **argv)
     m_db = new Database(this);
     QSettings s;
     QString path = s.value("LastFilePath", "").toString();
-    if (path.isEmpty() == false && path.endsWith(".hfdb"))
+    if (path.isEmpty() == false && path.endsWith(FILE_EXT))
     {
         m_db->load(path);
     }

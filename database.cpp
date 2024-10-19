@@ -95,6 +95,18 @@ const Wallet* Database::wallet(int index) const
     return &m_wallets[index];
 }
 
+const Wallet *Database::wallet(const QString &name) const
+{
+    for (const auto& wallet : m_wallets)
+    {
+        if (wallet.name == name)
+        {
+            return &wallet;
+        }
+    }
+    return nullptr;
+}
+
 bool Database::addWallet(const Wallet& wallet)
 {
     if (wallet.name.isEmpty())

@@ -53,7 +53,7 @@ void MainWindow::open()
 {
     QSettings s;
     QString filePath = s.value("LastFilePath", "").toString();
-    filePath = QFileDialog::getOpenFileName(this, "Open Database File", filePath, "HFDB (*.hfdb)");
+    filePath = QFileDialog::getOpenFileName(this, "Open Database File", filePath, QString("HF (*%1)").arg(FILE_EXT));
     if (!filePath.isEmpty())
     {
         s.setValue("LastFilePath", filePath);
@@ -68,8 +68,8 @@ void MainWindow::save()
     QString path = db->lastFilePath();
     if (path.isEmpty())
     {
-        path = QFileDialog::getSaveFileName(this, "Save Database File", "", "HFDB (*.hfdb)");
-        if (false == path.isEmpty())
+        path = QFileDialog::getSaveFileName(this, "Save Database File", "", QString("HF (*%1)").arg(FILE_EXT));
+        if (!path.isEmpty())
         {
             db->save(path);
             QSettings s;
@@ -86,7 +86,7 @@ void MainWindow::save()
 void MainWindow::saveAs()
 {
     QString path = db->lastFilePath();
-    path = QFileDialog::getSaveFileName(this, "Save Database File As", path, "HFDB (*.hfdb)");
+    path = QFileDialog::getSaveFileName(this, "Save Database File As", path, QString("HF (*.%1)").arg(FILE_EXT));
     if (false == path.isEmpty())
     {
         if (db->save(path))
@@ -108,7 +108,7 @@ void MainWindow::addWallet()
     AddWalletDialog d(this);
     if (d.exec())
     {
-        db->addWallet(d.walletData());
+        db->addWallet(d.wallet());
     }
 }
 
@@ -117,11 +117,7 @@ void MainWindow::addDebitJournal()
     AddJournalDialog d(true, this);
     if (d.exec())
     {
-        auto j = d.journalData();
-        if (j.entryDataList.size() > 0)
-        {
-            db->addJournal(j);
-        }
+        db->addJournal(d.journalForm());
     }
 }
 
@@ -130,11 +126,7 @@ void MainWindow::addCreditJournal()
     AddJournalDialog d(false, this);
     if (d.exec())
     {
-        auto j = d.journalData();
-        if (j.entryDataList.size() > 0)
-        {
-            db->addJournal(j);
-        }
+        db->addJournal(d.journalForm());
     }
 }
 

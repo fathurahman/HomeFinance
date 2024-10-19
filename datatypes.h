@@ -4,6 +4,8 @@
 #include <QString>
 #include <QDate>
 
+#define FILE_EXT ".hf"
+
 struct Wallet
 {
     QString name;

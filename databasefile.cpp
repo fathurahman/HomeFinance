@@ -89,7 +89,7 @@ void DatabaseFile::readWallets(QList<Wallet> &wallets)
 void DatabaseFile::writeTaggedNames(const QList<TaggedName> &arr)
 {
     writeInt(int(arr.size()));
-    for (const auto& it : iarr)
+    for (const auto& it : arr)
     {
         writeString(it.name);
         writeInt(int(it.tagIndices.size()));
