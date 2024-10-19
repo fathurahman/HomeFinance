@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QLineEdit>
 #include <QPushButton>
-#include "database.h"
+#include "datatypes.h"
 
 class AddWalletDialog : public QDialog
 {
@@ -12,7 +12,7 @@ class AddWalletDialog : public QDialog
 public:
     explicit AddWalletDialog(QWidget *parent = nullptr);
 
-    WalletData walletData() const;
+    Wallet wallet() const;
 
 signals:    
 

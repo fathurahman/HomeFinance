@@ -5,7 +5,7 @@
 #include <QPushButton>
 #include <QSpacerItem>
 #include "application.h"
-#include "database.h"
+#include "datatypes.h"
 
 AddWalletDialog::AddWalletDialog(QWidget *parent)
     : QDialog{parent}
@@ -21,7 +21,6 @@ AddWalletDialog::AddWalletDialog(QWidget *parent)
     auto* form = new QFormLayout;
     form->addRow("Name:", ui_name);
     form->addRow("Value:", ui_value);
-
 
     auto* add = new QPushButton("Add");
     connect(add, &QPushButton::clicked, this, &QDialog::accept);
@@ -42,21 +41,20 @@ AddWalletDialog::AddWalletDialog(QWidget *parent)
     setLayout(layout);
 }
 
-WalletData AddWalletDialog::walletData() const
+Wallet AddWalletDialog::wallet() const
 {
-    WalletData w;
-    w.name = ui_name->text();
-    w.value = ui_value->text().toLongLong();
-    return w;
+    return Wallet(ui_name->text(), ui_value->text().toLongLong());
 }
 
 void AddWalletDialog::onNameEdited(const QString &text)
 {
-    if (text.isEmpty() || db->hasWalletWithName(text)) {
+    if (text.isEmpty() || db->hasWalletWithName(text))
+	{
         ui_addButton->setEnabled(false);
         ui_name->setStyleSheet("background-color: red");
     }
-    else {
+    else
+	{
         ui_addButton->setEnabled(true);
         ui_name->setStyleSheet("background-color: white");
     }

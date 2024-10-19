@@ -10,7 +10,7 @@ struct Wallet
     qint64 value;
 
     Wallet() {}
-    Wallet(const QString& inName) : name(inName), value(0) {}
+    Wallet(const QString& inName, qint64 inValue = 0) : name(inName), value(inValue) {}
 };
 
 struct TaggedName
