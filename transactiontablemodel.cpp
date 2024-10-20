@@ -31,7 +31,7 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
     if (orientation == Qt::Horizontal) {
         switch(section) {
         case 0:
-            return "DateTime";
+            return "Date";
         case 1:
             return "Location";
         case 2:
