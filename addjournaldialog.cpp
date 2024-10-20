@@ -10,7 +10,7 @@ AddJournalDialog::AddJournalDialog(bool isDebit, QWidget *parent)
     : QDialog{parent}
 {
     setWindowTitle("Add Journal");
-    setMinimumSize(480, 800);
+    setMinimumSize(480, 600);
 
     m_itemNameCompleter = db->createItemNameCompleter(this);
 

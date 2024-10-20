@@ -16,7 +16,9 @@ SOURCES += \
     databasefile.cpp \
     main.cpp \
     mainwindow.cpp \
-    transactiontablemodel.cpp
+    transactiontablemodel.cpp \
+    filterwidget.cpp \
+    mainwidget.cpp
 
 HEADERS += \
     addjournaldialog.h \
@@ -26,7 +28,9 @@ HEADERS += \
     databasefile.h \
     datatypes.h \
     mainwindow.h \
-    transactiontablemodel.h
+    transactiontablemodel.h \
+    filterwidget.h \
+    mainwidget.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
