@@ -13,6 +13,7 @@
 #include "addwalletdialog.h"
 #include "addjournaldialog.h"
 #include "transactiontablemodel.h"
+#include "mainwidget.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -21,15 +22,8 @@ MainWindow::MainWindow(QWidget *parent)
     setMinimumSize(1024, 768);
     createActions();
     createMenus();
-
     connect(db, &Database::totalValueChanged, this, &MainWindow::updateWindowTitle);
-
-    auto* model = new TransactionTableModel(this);
-    auto* view = new QTableView();
-    view->setModel(model);
-    setCentralWidget(view);
-    view->setColumnWidth(0, 140);
-
+    setCentralWidget(new MainWidget);
 }
 
 MainWindow::~MainWindow()
@@ -39,13 +33,12 @@ MainWindow::~MainWindow()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     // TODO: peringatan kalau belum save cuy
-    qDebug() << "BYE BYE BLEH" << db->isModified();
     event->accept();
 }
 
 void MainWindow::updateWindowTitle()
 {
-    auto str = QString("Home Finance Rp. %1").arg(db->totalValue());
+    auto str = QString("Home Finance Rp. %L1").arg(db->totalValue(), 0, 'f', 2);
     setWindowTitle(str);
 }
 

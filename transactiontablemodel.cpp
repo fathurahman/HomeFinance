@@ -20,7 +20,7 @@ int TransactionTableModel::rowCount(const QModelIndex &) const
 
 int TransactionTableModel::columnCount(const QModelIndex &) const
 {
-    return 7;
+    return 6;
 }
 
 QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -31,19 +31,17 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
     if (orientation == Qt::Horizontal) {
         switch(section) {
         case 0:
-            return "Date";
+            return "Time & Place";
         case 1:
-            return "Location";
-        case 2:
-            return "Wallet";
-        case 3:
             return "Item";
-        case 4:
+        case 2:
             return "Debit";
-        case 5:
+        case 3:
             return "Credit";
-        case 6:
+        case 4:
             return "Balance";
+        case 5:
+            return "Wallet";
         default:
             return QVariant();
         }
@@ -53,33 +51,38 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
 
 QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
 {
-    if (role != Qt::DisplayRole) {
-        return QVariant();
-    }
-
     const int row = index.row();
     const auto& p = m_pointers[row];
     const auto t = db->transaction(p);
-
     const int col = index.column();
-    switch(col) {
-    case 0:
-        return t.date;
-    case 1:
-        return db->locationName(t.locationIndex);
-    case 2:
-        return db->wallet(t.walletIndex)->name;
-    case 3:
-        return db->itemName(t.itemIndex, t.num);
-    case 4:
-        return t.debit;
-    case 5:
-        return t.credit;
-    case 6:
-        return t.balance;
-    default:
+    if (role == Qt::DisplayRole)
+    {
+        switch(col)
+        {
+        case 0:
+            if (t.locationIndex < 0) return t.date;
+            return QString("%1, %2").arg(t.date.toString("dd/MM/yyyy")).arg(db->locationName(t.locationIndex));
+        case 1:
+            return db->itemName(t.itemIndex, t.num);
+        case 2:
+            if (t.debit == 0) return QVariant();
+            return QString("Rp. %L1").arg(t.debit);
+        case 3:
+            if (t.credit == 0) return QVariant();
+            return QString("Rp. %L1").arg(t.credit);
+        case 4:
+            return QString("Rp. %L1").arg(t.balance);
+        case 5:
+            return db->wallet(t.walletIndex)->name;
+        default:
+            return QVariant();
+        }
+    }
+    else
+    {
         return QVariant();
     }
+
 }
 
 void TransactionTableModel::populatePointers()

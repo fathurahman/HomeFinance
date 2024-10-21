@@ -84,7 +84,7 @@ JournalForm AddJournalDialog::journalForm() const
         JournalEntryForm e;
         e.itemName = row.name->text();
         e.num = row.quantity->value();
-        e.value = row.quantity->text().toLongLong();
+        e.value = row.value->text().toLongLong();
         if (e.value > 0.0)
         {
             j.entryForms.append(e);

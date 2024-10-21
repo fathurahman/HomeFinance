@@ -23,6 +23,8 @@ Application::Application(int &argc, char **argv)
         m_db->load(path);
     }
 
+    m_ttm = new TransactionTableModel(this);
+
     QRegularExpression re("[0-9]*");
     m_numValidator = new QRegularExpressionValidator(re, this);
 }

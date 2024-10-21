@@ -6,6 +6,8 @@
 #include <QApplication>
 #include <QValidator>
 #include <QLineEdit>
+#include "database.h"
+#include "transactiontablemodel.h"
 
 class Application : public QApplication
 {
@@ -13,13 +15,16 @@ class Application : public QApplication
 public:
     explicit Application(int &argc, char **argv);
 
+    inline Database* db() const { return m_db; }
+    inline TransactionTableModel* transactionTableModel() const { return m_ttm;}
     inline QValidator* numValidator() const { return m_numValidator; }
     QLineEdit* createNumLineEdit(qint64 value = 0, Qt::Alignment align = Qt::AlignLeft) const;
 
 signals:
 
 private:
-    class Database *m_db;
+    Database *m_db;
+    TransactionTableModel* m_ttm;
     QValidator* m_numValidator;
 };
 

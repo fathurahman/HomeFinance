@@ -136,7 +136,7 @@ QString Database::itemName(int index, int num) const
     {
         str = m_items[index].name;
     }
-    if (num > 0)
+    if (num > 1)
     {
         str = QString("%1 x%2").arg(str).arg(num);
     }
@@ -280,6 +280,9 @@ bool Database::addJournal(const JournalForm &form)
     }
     m_journals.append(journal);
 
+    emit journalAdded();
+    emit totalValueChanged();
+
     return true;
 }
 
@@ -289,7 +292,7 @@ TransactionFilter Database::normalizeFilter(const TransactionFilter& filter) con
 
     if (f.locationName.isEmpty())
     {
-        f.hasItemName = false;
+        f.hasLocationName = false;
         f.locationIndex = -1;
     }
     else
