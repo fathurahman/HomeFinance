@@ -126,6 +126,8 @@ bool Database::addWallet(const Wallet& wallet)
         m_totalValue += wallet.value;
         emit totalValueChanged();
     }
+    m_isModified = true;
+    emit walletAdded();
     return true;
 }
 
@@ -279,10 +281,9 @@ bool Database::addJournal(const JournalForm &form)
         return false;
     }
     m_journals.append(journal);
-
+    m_isModified = true;
     emit journalAdded();
-    emit totalValueChanged();
-
+    emit totalValueChanged();    
     return true;
 }
 
@@ -398,7 +399,7 @@ bool Database::filterItemIndex(int index, const TransactionFilter& f) const
     {
         return f.itemIndex == index;
     }
-    return f.itemName == m_items[index].name;
+    return m_items[index].name.contains(f.itemName);
 }
 
 bool Database::filterJournal(const Journal& j, const TransactionFilter &f) const

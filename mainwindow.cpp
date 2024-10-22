@@ -8,6 +8,7 @@
 #include <QFile>
 #include <QTableView>
 #include <QCloseEvent>
+#include <QMessageBox>
 #include "application.h"
 #include "database.h"
 #include "addwalletdialog.h"
@@ -32,8 +33,28 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    // TODO: peringatan kalau belum save cuy
-    event->accept();
+    QString path = db->lastFilePath();
+    if (db->isModified() && path.isEmpty() == false)
+    {
+        QMessageBox mb;
+        mb.setText("The database has been modified.");
+        mb.setInformativeText("Do yout want to save your changes ?");
+        mb.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+        mb.setDefaultButton(QMessageBox::Save);
+        int ret = mb.exec();
+        switch(ret)
+        {
+        case QMessageBox::Save:
+            db->save(path);
+            break;
+        case QMessageBox::Discard:
+            event->accept();
+            break;
+        default:
+            event->ignore();
+            break;
+        }
+    }
 }
 
 void MainWindow::updateWindowTitle()

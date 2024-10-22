@@ -58,6 +58,7 @@ signals:
     void loading();
     void loaded();
     void totalValueChanged();
+    void walletAdded();
     void journalAdded();
 
 private:

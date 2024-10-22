@@ -3,6 +3,7 @@
 #include <QFormLayout>
 #include <QPushButton>
 #include <QCompleter>
+#include <QLabel>
 #include "application.h"
 #include "database.h"
 
@@ -45,14 +46,15 @@ AddJournalDialog::AddJournalDialog(bool isDebit, QWidget *parent)
     ui_rowBox = new QVBoxLayout;
     addRow();
 
-    QWidget* rows = new QWidget;
-    rows->setMinimumWidth(440);
-    rows->setLayout(ui_rowBox);
+    auto addEntry = new QPushButton("Add Entry");
+    connect(addEntry, &QPushButton::clicked, this, &AddJournalDialog::addRow);
 
-    auto* scrollArea = new QScrollArea;
-    scrollArea->setWidget(rows);
+    QVBoxLayout* rows = new QVBoxLayout;
+    rows->addLayout(ui_rowBox);
+    rows->addWidget(addEntry);
+    rows->addStretch(1);
 
-    auto* add = new QPushButton("Add");
+    auto* add = new QPushButton("Add Journal");
     connect(add, &QPushButton::clicked, this, &QDialog::accept);
 
     auto* cancel = new QPushButton("Cancel");
@@ -64,11 +66,12 @@ AddJournalDialog::AddJournalDialog(bool isDebit, QWidget *parent)
 
     auto* layout = new QVBoxLayout;
     layout->addLayout(form);
-    layout->addWidget(scrollArea, 1);
+    layout->addWidget(new QLabel("Entries:"));
+    layout->addLayout(rows, 1);
     layout->addLayout(buttons);
     setLayout(layout);
 
-    ui_wallet->setFocus();
+    ui_location->setFocus();
 }
 
 
@@ -111,6 +114,12 @@ void AddJournalDialog::addRow()
     auto layout = new QHBoxLayout;
     layout->addWidget(row.name, 2);
     layout->addWidget(row.quantity);
-    layout->addWidget(row.value, 2);
+    layout->addWidget(row.value, 2);        
+
     ui_rowBox->addLayout(layout);
+
+    if (ui_rows.size() > 1)
+    {
+        row.name->setFocus();
+    }
 }
