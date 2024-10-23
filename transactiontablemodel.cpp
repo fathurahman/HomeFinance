@@ -1,4 +1,5 @@
 ﻿#include "transactiontablemodel.h"
+#include <QBrush>
 
 TransactionTableModel::TransactionTableModel(QObject *parent)
     : QAbstractTableModel{parent}
@@ -78,10 +79,26 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return QVariant();
         }
     }
-    else
+    else if (role == Qt::TextAlignmentRole)
     {
-        return QVariant();
+        if (col == 2|| col == 3 || col == 4)
+        {
+            return { Qt::AlignRight | Qt::AlignCenter };
+        }
+        else if (col == 5)
+        {
+            return { Qt::AlignCenter };
+        }
     }
+    else if (role == Qt::BackgroundRole)
+    {
+        if (row % 2)
+        {
+            int c = 0xF0;
+            return QBrush(QColor(c, c, c));
+        }
+    }
+    return QVariant();
 
 }
 

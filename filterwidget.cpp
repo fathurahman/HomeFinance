@@ -50,6 +50,7 @@ FilterWidget::FilterWidget(QWidget* parent)
     top->addWidget(ui_wallet);
     top->addWidget(new QLabel("Flow:"));
     top->addWidget(ui_flow);
+    top->addStretch();
 
     auto* bot = new QHBoxLayout;
     bot->addWidget(new QLabel("Location:"));

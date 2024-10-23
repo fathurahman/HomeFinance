@@ -112,7 +112,7 @@ bool Database::addWallet(const Wallet& wallet)
     if (wallet.name.isEmpty())
     {
         return false;
-    }
+    }    
     for (const auto& w : m_wallets)
     {
         if (wallet.name == w.name)
@@ -121,7 +121,7 @@ bool Database::addWallet(const Wallet& wallet)
         }
     }
     m_wallets.append(wallet);
-    if (wallet.value != 0)
+    if (wallet.value > 0)
     {
         m_totalValue += wallet.value;
         emit totalValueChanged();

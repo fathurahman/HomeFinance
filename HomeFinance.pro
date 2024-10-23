@@ -18,7 +18,8 @@ SOURCES += \
     mainwindow.cpp \
     transactiontablemodel.cpp \
     filterwidget.cpp \
-    mainwidget.cpp
+    mainwidget.cpp \
+    viewwalletsdialog.cpp
 
 HEADERS += \
     addjournaldialog.h \
@@ -30,7 +31,8 @@ HEADERS += \
     mainwindow.h \
     transactiontablemodel.h \
     filterwidget.h \
-    mainwidget.h
+    mainwidget.h \
+    viewwalletsdialog.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

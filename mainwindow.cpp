@@ -13,6 +13,7 @@
 #include "database.h"
 #include "addwalletdialog.h"
 #include "addjournaldialog.h"
+#include "viewwalletsdialog.h"
 #include "transactiontablemodel.h"
 #include "mainwidget.h"
 
@@ -144,6 +145,12 @@ void MainWindow::addCreditJournal()
     }
 }
 
+void MainWindow::viewWallets()
+{
+    ViewWalletsDialog d(this);
+    d.exec();
+}
+
 void MainWindow::createActions()
 {
     m_actOpen = new QAction("&Open", this);
@@ -171,7 +178,6 @@ void MainWindow::createActions()
     m_actAddWallet->setStatusTip("Add new wallet");
     connect(m_actAddWallet, &QAction::triggered, this, &MainWindow::addWallet);
 
-
     m_actAddDebitJournal = new QAction("Add &Debit Journal", this);
     m_actAddDebitJournal->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
     m_actAddDebitJournal->setStatusTip("Add debit journal to the current wallet");
@@ -182,6 +188,10 @@ void MainWindow::createActions()
     m_actAddCreditJournal->setStatusTip("Add credit journal to the current wallet");
     connect(m_actAddCreditJournal, &QAction::triggered, this, &MainWindow::addCreditJournal);
 
+    m_actViewWallets = new QAction("View Wallets", this);
+    m_actViewWallets->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_W));
+    m_actViewWallets->setStatusTip("View all wallets in the database");
+    connect(m_actViewWallets, &QAction::triggered, this, &MainWindow::viewWallets);
 }
 
 void MainWindow::createMenus()
@@ -197,9 +207,9 @@ void MainWindow::createMenus()
 
     m_databaseMenu = mb->addMenu("Database");
     m_databaseMenu->addAction(m_actAddWallet);
-    m_databaseMenu->addSeparator();
     m_databaseMenu->addAction(m_actAddDebitJournal);
     m_databaseMenu->addAction(m_actAddCreditJournal);
-
+    m_databaseMenu->addSeparator();
+    m_databaseMenu->addAction(m_actViewWallets);
 }
 

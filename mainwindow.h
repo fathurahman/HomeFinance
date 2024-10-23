@@ -20,6 +20,7 @@ private:
     QAction* m_actAddWallet;
     QAction* m_actAddDebitJournal;
     QAction* m_actAddCreditJournal;
+    QAction* m_actViewWallets;
 
     QMenu* m_fileMenu;
     QMenu* m_databaseMenu;
@@ -36,6 +37,7 @@ private slots:
     void addWallet();
     void addDebitJournal();
     void addCreditJournal();
+    void viewWallets();
 
 private:
     void createActions();
