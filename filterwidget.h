@@ -17,11 +17,9 @@ private:
     QSpinBox* ui_year;
     QSpinBox* ui_month;
     QSpinBox* ui_day;
-    QLineEdit* ui_locationName;
-    QLineEdit* ui_itemName;
-    QLineEdit* ui_tagName;
     QComboBox* ui_wallet;
     QComboBox* ui_flow;
+    QLineEdit* ui_keyword;
 
 private slots:
     void updateWallet();

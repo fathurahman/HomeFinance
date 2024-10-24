@@ -20,10 +20,6 @@ FilterWidget::FilterWidget(QWidget* parent)
     ui_day->setRange(-1, 31);
     ui_day->setValue(-1);
 
-    ui_locationName = new QLineEdit;
-    ui_itemName = new QLineEdit;
-    ui_tagName = new QLineEdit;
-
     ui_wallet = new QComboBox;
     ui_wallet->setMinimumWidth(160);
     updateWallet();
@@ -33,45 +29,30 @@ FilterWidget::FilterWidget(QWidget* parent)
     ui_flow->addItems({"Any", "Debit", "Credit"});
     ui_flow->setCurrentIndex(0);
 
-    auto* reset = new QPushButton("Reset");
-    connect(reset, &QPushButton::clicked, this, &FilterWidget::resetFilter);
+    ui_keyword = new QLineEdit;
 
-    auto* apply = new QPushButton("Apply");
-    connect(apply, &QPushButton::clicked, this, &FilterWidget::applyFilter);
+    auto* resetButton = new QPushButton("Reset");
+    connect(resetButton, &QPushButton::clicked, this, &FilterWidget::resetFilter);
 
-    auto* top = new QHBoxLayout;
-    top->addWidget(new QLabel("Year:"));
-    top->addWidget(ui_year);
-    top->addWidget(new QLabel("Month:"));
-    top->addWidget(ui_month);
-    top->addWidget(new QLabel("Day:"));
-    top->addWidget(ui_day);
-    top->addWidget(new QLabel("Wallet:"));
-    top->addWidget(ui_wallet);
-    top->addWidget(new QLabel("Flow:"));
-    top->addWidget(ui_flow);
-    top->addStretch();
+    auto* applyButton = new QPushButton("Apply");
+    connect(applyButton, &QPushButton::clicked, this, &FilterWidget::applyFilter);
 
-    auto* bot = new QHBoxLayout;
-    bot->addWidget(new QLabel("Location:"));
-    bot->addWidget(ui_locationName);
-    bot->addWidget(new QLabel("Item:"));
-    bot->addWidget(ui_itemName);
-    bot->addWidget(new QLabel("Tag:"));
-    bot->addWidget(ui_tagName);
-
-    auto* fbox = new QVBoxLayout;
-    fbox->addLayout(top);
-    fbox->addLayout(bot);
-
-    auto* bbox = new QVBoxLayout;
-    bbox->addWidget(reset);
-    bbox->addWidget(apply);
-
-    auto* layout = new QHBoxLayout;
-    layout->addLayout(fbox);
-    layout->addLayout(bbox);
-    setLayout(layout);
+    auto* l = new QHBoxLayout;
+    l->addWidget(resetButton);
+    l->addWidget(new QLabel("Year:"));
+    l->addWidget(ui_year);
+    l->addWidget(new QLabel("Month:"));
+    l->addWidget(ui_month);
+    l->addWidget(new QLabel("Day:"));
+    l->addWidget(ui_day);
+    l->addWidget(new QLabel("Wallet:"));
+    l->addWidget(ui_wallet);
+    l->addWidget(new QLabel("Flow:"));
+    l->addWidget(ui_flow);
+    l->addWidget(new QLabel("Keyword:"));
+    l->addWidget(ui_keyword);
+    l->addWidget(applyButton);
+    setLayout(l);
 }
 
 void FilterWidget::updateWallet()
@@ -97,11 +78,9 @@ void FilterWidget::resetFilter()
     ui_year->setValue(-1);
     ui_month->setValue(-1);
     ui_day->setValue(-1);
-    ui_locationName->setText("");
-    ui_itemName->setText("");
-    ui_tagName->setText("");
     ui_wallet->setCurrentIndex(0);
     ui_flow->setCurrentIndex(0);
+    ui_keyword->setText("");
     app->transactionTableModel()->setFilter(TransactionFilter());
 }
 
@@ -111,10 +90,11 @@ void FilterWidget::applyFilter()
     f.year = ui_year->value();
     f.month = ui_month->value();
     f.day = ui_day->value();
-    f.locationName = ui_locationName->text();
-    f.itemName = ui_itemName->text();
-    f.tagName = ui_tagName->text();
     f.walletIndex = ui_wallet->currentIndex() - 1;
     f.flow = ui_flow->currentIndex();
+    auto key = ui_keyword->text();
+    f.itemName = key;
+    f.tagName = key;
+    f.locationName = key;
     app->transactionTableModel()->setFilter(f);
 }

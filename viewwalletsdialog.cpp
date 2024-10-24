@@ -8,7 +8,6 @@
 ViewWalletsDialog::ViewWalletsDialog(QWidget *parent)
     : QDialog{parent}
 {
-    setMinimumWidth(260);
     setWindowTitle("Wallets");
 
     auto* closeButton = new QPushButton("Close");
