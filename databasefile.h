@@ -11,7 +11,7 @@ class DatabaseFile : public QObject
 public:
     explicit DatabaseFile(QObject *parent = nullptr);
 
-    bool open(const QString& path, QIODeviceBase::OpenMode mode);
+    bool open(const QString& path, QIODevice::OpenMode mode);
 
     bool readBool();
     void writeBool(bool value);

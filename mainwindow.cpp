@@ -21,7 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     updateWindowTitle();
-    setMinimumSize(1024, 768);
+    setMinimumSize(1280, 720);
     createActions();
     createMenus();
     connect(db, &Database::totalValueChanged, this, &MainWindow::updateWindowTitle);
@@ -60,7 +60,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::updateWindowTitle()
 {
-    auto str = QString("Home Finance Rp. %L1").arg(db->totalValue(), 0, 'f', 2);
+	qlonglong val = db->totalValue();
+	auto str = QString("Home Finance Rp. %L1").arg(val, 0, 2);
     setWindowTitle(str);
 }
 

@@ -5,7 +5,7 @@ DatabaseFile::DatabaseFile(QObject *parent)
 {
 }
 
-bool DatabaseFile::open(const QString &path, QIODeviceBase::OpenMode mode)
+bool DatabaseFile::open(const QString &path, QIODevice::OpenMode mode)
 {
     file.setFileName(path);
     return file.open(mode);
@@ -78,11 +78,14 @@ void DatabaseFile::writeWallets(const QList<Wallet> &wallets)
 
 void DatabaseFile::readWallets(QList<Wallet> &wallets)
 {
-    wallets.resize(readInt());
-    for (auto& wallet : wallets)
+    wallets.clear();
+    int n = readInt();
+    for (int i = 0; i < n; ++i)
     {
+	Wallet wallet;
         wallet.name = readString();
         wallet.value = readValue();
+	wallets.append(wallet);
     }
 }
 
@@ -102,11 +105,11 @@ void DatabaseFile::writeTaggedNames(const QList<TaggedName> &arr)
 
 void DatabaseFile::readTaggedNames(QList<TaggedName> &arr)
 {
-    arr.resize(readInt());
+    arr.reserve(readInt());
     for (auto& it: arr)
     {
         it.name = readString();
-        it.tagIndices.resize(readInt());
+        it.tagIndices.reserve(readInt());
         for (auto& i : it.tagIndices)
         {
             i = readInt();
@@ -136,14 +139,14 @@ void DatabaseFile::writeJournals(const QList<Journal> &journals)
 void DatabaseFile::readJournals(QList<Journal> &journals)
 {
     int num = readInt();
-    journals.resize(num);
+    journals.reserve(num);
     for (auto& journal : journals)
     {
         journal.date = QDate::fromJulianDay(readValue());
         journal.locationIndex = readInt();
         journal.walletIndex = readInt();
         journal.isDebit = readBool();
-        journal.entries.resize(readInt());
+        journal.entries.reserve(readInt());
         for (auto& entry : journal.entries)
         {
             entry.itemIndex = readInt();
@@ -167,7 +170,7 @@ void DatabaseFile::writeStringList(const QStringList& list)
 
 void DatabaseFile::readStringList(QStringList& list)
 {
-    list.resize(readInt());
+    list.reserve(readInt());
     for (auto& it : list)
     {
         it = readString();
