@@ -13,7 +13,11 @@ struct Wallet
     bool external;
 
     Wallet() {}
-    Wallet(const QString& inName, qint64 inValue = 0) : name(inName), value(inValue) {}
+    Wallet(const QString& inName, qint64 inValue = 0, bool inExternal = false)
+        : name(inName)
+        , value(inValue)
+        , external(inExternal)
+    {}
 };
 
 struct TaggedName
@@ -56,6 +60,7 @@ struct JournalForm
     QString locationName;
     QString walletName;
     bool isDebit;
+    bool isPostBalance;
     QList<JournalEntryForm> entryForms;
 };
 

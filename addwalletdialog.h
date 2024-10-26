@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QCheckBox>
 #include "datatypes.h"
 
 class AddWalletDialog : public QDialog
@@ -19,6 +20,7 @@ signals:
 private:
     QLineEdit* ui_name;
     QLineEdit* ui_value;
+    QCheckBox* ui_external;
     QPushButton* ui_addButton;
 
 private slots:

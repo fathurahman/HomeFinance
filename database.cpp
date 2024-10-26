@@ -130,7 +130,7 @@ bool Database::addWallet(const Wallet& wallet)
         }
     }
     m_wallets.append(wallet);
-    if (wallet.value > 0)
+    if (!wallet.external && wallet.value > 0)
     {
         m_totalValue += wallet.value;
         emit totalValueChanged();
@@ -265,30 +265,45 @@ bool Database::addJournal(const JournalForm &form)
     Wallet& wallet = m_wallets[walletIndex];
 
     Journal journal;
-        journal.date = form.date;
-        journal.locationIndex = getOrAddLocationIndexByName(form.locationName);
-        journal.walletIndex = walletIndex;
-        journal.isDebit = form.isDebit;
-        for (const auto& eform : form.entryForms)
+    journal.date = form.date;
+    journal.locationIndex = getOrAddLocationIndexByName(form.locationName);
+    journal.walletIndex = walletIndex;
+    journal.isDebit = form.isDebit;
+    qint64 journalValue = 0;
+    for (const auto& eform : form.entryForms)
+    {
+        JournalEntry e;
+        e.itemIndex = getOrAddItemIndexByName(eform.itemName);
+        e.num = eform.num;
+        e.value = eform.value;
+        if (e.value == 0)
         {
-            JournalEntry e;
-                e.itemIndex = getOrAddItemIndexByName(eform.itemName);
-                e.num = eform.num;
-                e.value = eform.value;
-                    qint64 val = journal.isDebit ? e.value : -e.value;
-                    if (val == 0)
-                    {
-                        continue;
-                    }
-                    wallet.value += val;
-                    m_totalValue += val;
-                e.balance = wallet.value;
-            journal.entries.append(e);
+            continue;
         }
+        journal.entries.append(e);
+        journalValue += journal.isDebit ? e.value : -e.value;
+    }
     if (journal.entries.isEmpty())
     {
         return false;
     }
+
+    if (form.isPostBalance == false)
+    {
+        wallet.value -= journalValue;
+    }
+
+    for (auto& e : journal.entries)
+    {
+        const qint64 value = journal.isDebit ? e.value : -e.value;
+        wallet.value += value;
+        e.balance = wallet.value;
+        if (form.isPostBalance && !wallet.external)
+        {
+            m_totalValue += value;
+        }
+    }
+
     m_journals.append(journal);
     m_isModified = true;
     emit journalAdded();

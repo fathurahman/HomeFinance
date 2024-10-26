@@ -18,9 +18,13 @@ AddWalletDialog::AddWalletDialog(QWidget *parent)
 
     ui_value = app->createNumLineEdit();
 
+    ui_external = new QCheckBox();
+    ui_external->setChecked(false);
+
     auto* form = new QFormLayout;
     form->addRow("Name:", ui_name);
     form->addRow("Value:", ui_value);
+    form->addRow("External:", ui_external);
 
     auto* add = new QPushButton("Add");
     connect(add, &QPushButton::clicked, this, &QDialog::accept);
