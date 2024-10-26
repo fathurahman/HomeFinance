@@ -73,6 +73,7 @@ void DatabaseFile::writeWallets(const QList<Wallet> &wallets)
     {
         writeString(wallet.name);
         writeValue(wallet.value);
+        writeBool(wallet.external);
     }
 }
 
@@ -82,10 +83,11 @@ void DatabaseFile::readWallets(QList<Wallet> &wallets)
     int n = readInt();
     for (int i = 0; i < n; ++i)
     {
-	Wallet wallet;
+        Wallet wallet;
         wallet.name = readString();
         wallet.value = readValue();
-	wallets.append(wallet);
+        wallet.external = readBool();
+        wallets.append(wallet);
     }
 }
 

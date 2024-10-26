@@ -13,6 +13,8 @@ class Database : public QObject
 public:
     explicit Database(QObject *parent = nullptr);
 
+    int version() const;
+
     inline bool isModified() const { return m_isModified; }
 
     inline QString lastFilePath() const { return m_lastFilePath; }

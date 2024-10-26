@@ -3,6 +3,8 @@
 #include "database.h"
 #include "databasefile.h"
 
+#define DB_VERSION 1
+
 Database *db = nullptr;
 
 QString Transaction::locationName() const
@@ -29,6 +31,13 @@ bool Database::load(const QString& path)
         qDebug() << "ERROR: can not open file for reading:" << path;
         return false;
     }
+
+    int version = file.readInt();
+    if (version != DB_VERSION)
+    {
+        return false;
+    }
+
     emit loading();
 
     file.readWallets(m_wallets);

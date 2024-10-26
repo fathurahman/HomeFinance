@@ -83,7 +83,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     {
         if (col == 2|| col == 3 || col == 4)
         {
-            return { Qt::AlignRight | Qt::AlignCenter };
+            const int a = Qt::AlignRight | Qt::AlignVCenter;
+            return a;
         }
         else if (col == 5)
         {

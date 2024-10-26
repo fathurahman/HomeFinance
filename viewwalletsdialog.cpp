@@ -42,7 +42,16 @@ QVBoxLayout* ViewWalletsDialog::makeRows()
     for (int i = 0; i < n; ++i)
     {
         const auto* wallet = db->wallet(i);
-        auto* row = makeRow(wallet->name, wallet->value);
+        QString name;
+        if (wallet->external)
+        {
+            name = QString("%1*").arg(wallet->name);
+        }
+        else
+        {
+            name = wallet->name;
+        }
+        auto* row = makeRow(name, wallet->value);
         rows->addLayout(row);
     }
 

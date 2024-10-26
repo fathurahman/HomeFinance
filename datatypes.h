@@ -10,6 +10,7 @@ struct Wallet
 {
     QString name;
     qint64 value;
+    bool external;
 
     Wallet() {}
     Wallet(const QString& inName, qint64 inValue = 0) : name(inName), value(inValue) {}
