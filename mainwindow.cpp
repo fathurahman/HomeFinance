@@ -61,7 +61,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::updateWindowTitle()
 {
 	qlonglong val = db->totalValue();
-	auto str = QString("Home Finance Rp. %L1").arg(val, 0, 2);
+    auto str = QString("Home Finance Rp. %L1").arg(val);
     setWindowTitle(str);
 }
 
