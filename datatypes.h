@@ -11,13 +11,16 @@ struct Wallet
     QString name;
     qint64 value;
     bool external;
+    QDate date;
 
     Wallet() {}
-    Wallet(const QString& inName, qint64 inValue = 0, bool inExternal = false)
+    Wallet(const QString& inName, qint64 inValue = 0, bool inExternal = false, QDate inDate = QDate::currentDate())
         : name(inName)
         , value(inValue)
         , external(inExternal)
-    {}
+        , date(inDate)
+    {
+    }
 };
 
 struct TaggedName
@@ -60,7 +63,6 @@ struct JournalForm
     QString locationName;
     QString walletName;
     bool isDebit;
-    bool isPostBalance;
     QList<JournalEntryForm> entryForms;
 };
 
@@ -87,8 +89,11 @@ struct TransactionFilter
     QString locationName;
     QString itemName;
     QString tagName;
+    QString keyword;
     int walletIndex = -1;
     int flow = 0;
+
+    bool hasKeyword;
 
     bool hasLocationName;
     int locationIndex;

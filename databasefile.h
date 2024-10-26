@@ -25,6 +25,9 @@ public:
     QString readString();
     void writeString(const QString& str);
 
+    QDate readDate();
+    void writeDate(const QDate& date);
+
     void writeWallets(const QList<Wallet>& wallets);
     void readWallets(QList<Wallet>& wallets);
 

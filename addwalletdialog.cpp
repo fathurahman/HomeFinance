@@ -11,7 +11,7 @@ AddWalletDialog::AddWalletDialog(QWidget *parent)
     : QDialog{parent}
 {
     setWindowTitle("Add Wallet");
-    setMinimumSize(240, 110);
+    setMinimumWidth(240);
 
     ui_name = new QLineEdit();
     connect(ui_name, &QLineEdit::textEdited, this, &AddWalletDialog::onNameEdited);
@@ -21,7 +21,11 @@ AddWalletDialog::AddWalletDialog(QWidget *parent)
     ui_external = new QCheckBox();
     ui_external->setChecked(false);
 
+    ui_date = new QDateEdit();
+    ui_date->setDate(QDate::currentDate());
+
     auto* form = new QFormLayout;
+    form->addRow("Date:", ui_date);
     form->addRow("Name:", ui_name);
     form->addRow("Value:", ui_value);
     form->addRow("External:", ui_external);
@@ -43,11 +47,17 @@ AddWalletDialog::AddWalletDialog(QWidget *parent)
     layout->addLayout(form);
     layout->addLayout(buttons);
     setLayout(layout);
+
+    ui_name->setFocus();
 }
 
 Wallet AddWalletDialog::wallet() const
 {
-    return Wallet(ui_name->text(), ui_value->text().toLongLong());
+    return Wallet(
+                ui_name->text(),
+                ui_value->text().toLongLong(),
+                ui_external->isChecked(),
+                ui_date->date());
 }
 
 void AddWalletDialog::onNameEdited(const QString &text)

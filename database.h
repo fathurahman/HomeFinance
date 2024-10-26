@@ -76,10 +76,11 @@ private:
     qint64 m_totalValue = 0;
 
 private:
+    void updateTotalValue(bool forceUpdate = false);
+
     int getOrAddWalletIndexByName(const QString& name);
     int getOrAddLocationIndexByName(const QString& name);
     int getOrAddItemIndexByName(const QString& name);
-
 
     TransactionFilter normalizeFilter(const TransactionFilter& filter) const;
     bool filterDate(const QDate &date, const TransactionFilter& filter) const;
@@ -87,6 +88,8 @@ private:
     bool filterItemIndex(int index, const TransactionFilter& filter) const;
     bool filterJournal(const Journal& journal, const TransactionFilter& filter) const;
     bool filterJournalEntry(const JournalEntry& entry, const TransactionFilter& filter) const;
+    bool checkJournalKey(const Journal& journal, const TransactionFilter& filter) const;
+    bool checkJournalEntryKey(const JournalEntry& entry, const TransactionFilter& filter) const;
 };
 
 extern Database *db;

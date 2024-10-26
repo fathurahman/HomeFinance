@@ -32,6 +32,12 @@ bool Database::load(const QString& path)
         return false;
     }
 
+    int firstInt = file.readInt();
+    if (firstInt != 0)
+    {
+        return false;
+    }
+
     int version = file.readInt();
     if (version != DB_VERSION)
     {
@@ -49,11 +55,8 @@ bool Database::load(const QString& path)
     m_isModified = false;
     m_lastFilePath = path;
     m_activeWalletIndex = (m_wallets.size() == 0) ? -1 : 0;
-    m_totalValue = 0;
-    for (const auto& wallet : m_wallets)
-    {
-        m_totalValue += wallet.value;
-    }
+
+    updateTotalValue(true);
 
     emit loaded();
 
@@ -68,6 +71,8 @@ bool Database::save(const QString &path) const
         return false;
     }
 
+    file.writeInt(0);
+    file.writeInt(DB_VERSION);
     file.writeWallets(m_wallets);
     file.writeTaggedNames(m_items);
     file.writeTaggedNames(m_locations);
@@ -130,11 +135,7 @@ bool Database::addWallet(const Wallet& wallet)
         }
     }
     m_wallets.append(wallet);
-    if (!wallet.external && wallet.value > 0)
-    {
-        m_totalValue += wallet.value;
-        emit totalValueChanged();
-    }
+    updateTotalValue();
     m_isModified = true;
     emit walletAdded();
     return true;
@@ -257,19 +258,21 @@ int Database::getOrAddItemIndexByName(const QString &name)
 
 bool Database::addJournal(const JournalForm &form)
 {
-    const int walletIndex = getOrAddWalletIndexByName(form.walletName);
-    if (walletIndex < 0)
+    Journal journal;
+
+    journal.walletIndex = getOrAddWalletIndexByName(form.walletName);
+    if (journal.walletIndex < 0)
     {
         return false;
-    }
-    Wallet& wallet = m_wallets[walletIndex];
+    }    
+    Wallet& wallet = m_wallets[journal.walletIndex];
 
-    Journal journal;
     journal.date = form.date;
+
     journal.locationIndex = getOrAddLocationIndexByName(form.locationName);
-    journal.walletIndex = walletIndex;
+
     journal.isDebit = form.isDebit;
-    qint64 journalValue = 0;
+
     for (const auto& eform : form.entryForms)
     {
         JournalEntry e;
@@ -280,34 +283,24 @@ bool Database::addJournal(const JournalForm &form)
         {
             continue;
         }
+        auto value = journal.isDebit ? e.value : -e.value;
+        wallet.value += value;
+        e.balance = wallet.value;
         journal.entries.append(e);
-        journalValue += journal.isDebit ? e.value : -e.value;
     }
     if (journal.entries.isEmpty())
     {
         return false;
     }
 
-    if (form.isPostBalance == false)
-    {
-        wallet.value -= journalValue;
-    }
-
-    for (auto& e : journal.entries)
-    {
-        const qint64 value = journal.isDebit ? e.value : -e.value;
-        wallet.value += value;
-        e.balance = wallet.value;
-        if (form.isPostBalance && !wallet.external)
-        {
-            m_totalValue += value;
-        }
-    }
-
     m_journals.append(journal);
+
+    updateTotalValue();
+
     m_isModified = true;
+
     emit journalAdded();
-    emit totalValueChanged();    
+
     return true;
 }
 
@@ -371,6 +364,26 @@ TransactionFilter Database::normalizeFilter(const TransactionFilter& filter) con
         }
     }
 
+    f.hasKeyword = false;
+    if (filter.keyword.isEmpty() == false)
+    {
+        if (filter.keyword == "debit")
+        {
+            f.keyword = QString();
+            f.flow = 1;
+        }
+        else if (filter.keyword == "credit")
+        {
+            f.keyword = QString();
+            f.flow = 2;
+        }
+        else
+        {
+            f.hasKeyword = true;
+        }
+    }
+
+
     return f;
 }
 
@@ -391,6 +404,8 @@ bool Database::filterDate(const QDate& d, const TransactionFilter& f) const
     }
     return true;
 }
+
+
 
 bool Database::filterLocationIndex(int index, const TransactionFilter& f) const
 {
@@ -472,6 +487,48 @@ bool Database::filterJournalEntry(const JournalEntry &entry, const TransactionFi
     return true;
 }
 
+bool Database::checkJournalKey(const Journal &journal, const TransactionFilter &filter) const
+{
+    if (filter.hasKeyword == false)
+    {
+        return true;
+    }
+    if (journal.locationIndex >= 0)
+    {
+        const auto& name = m_locations[journal.locationIndex].name;
+        if (name.contains(filter.keyword))
+        {
+            return true;
+        }
+    }
+    if (journal.walletIndex >= 0)
+    {
+        const auto& name = m_wallets[journal.walletIndex].name;
+        if (name.contains(filter.keyword))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Database::checkJournalEntryKey(const JournalEntry &entry, const TransactionFilter &filter) const
+{
+    if (filter.hasKeyword == false)
+    {
+        return true;
+    }
+    if (entry.itemIndex >= 0)
+    {
+        const auto& name = m_items[entry.itemIndex].name;
+        if (name.contains(filter.keyword))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 QList<TransactionPointer> Database::filterTransactions(const TransactionFilter &filter) const
 {
     QList<TransactionPointer> ret;
@@ -482,13 +539,17 @@ QList<TransactionPointer> Database::filterTransactions(const TransactionFilter &
         const auto& j = m_journals[i];
         if (filterJournal(j, f))
         {
+            bool hasJournalKey = checkJournalKey(j, f);
             const int nn = j.entries.size();
             for (int ii = 0; ii < nn; ++ii)
             {
                 const auto& e = j.entries.at(ii);
                 if (filterJournalEntry(e, f))
                 {
-                    ret.append(TransactionPointer(i, ii));
+                    if (hasJournalKey || checkJournalEntryKey(e, f))
+                    {
+                        ret.append(TransactionPointer(i, ii));
+                    }
                 }
             }
         }
@@ -510,5 +571,22 @@ Transaction Database::transaction(const TransactionPointer& ptr) const
     tx.credit = j.isDebit ? 0 : e.value;
     tx.balance = e.balance;
     return tx;
+}
+
+void Database::updateTotalValue(bool forceUpdate)
+{
+    qint64 totalValue = 0;
+    for (const auto& wallet : m_wallets)
+    {
+        if (wallet.external == false)
+        {
+            totalValue += wallet.value;
+        }
+    }
+    if (forceUpdate || totalValue != m_totalValue)
+    {
+        m_totalValue = totalValue;
+        emit totalValueChanged();
+    }
 }
 

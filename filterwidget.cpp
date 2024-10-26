@@ -91,10 +91,7 @@ void FilterWidget::applyFilter()
     f.month = ui_month->value();
     f.day = ui_day->value();
     f.walletIndex = ui_wallet->currentIndex() - 1;
-    f.flow = ui_flow->currentIndex();
-    auto key = ui_keyword->text();
-    f.itemName = key;
-    f.tagName = key;
-    f.locationName = key;
+    f.flow = ui_flow->currentIndex();    
+    f.keyword = ui_keyword->text();
     app->transactionTableModel()->setFilter(f);
 }

@@ -20,7 +20,7 @@ bool DatabaseFile::readBool()
 
 void DatabaseFile::writeBool(bool value)
 {
-    char ch = value ? 0 : 1;
+    const char ch = value ? 1 : 0;
     file.write(&ch, 1);
 }
 
@@ -66,6 +66,18 @@ void DatabaseFile::writeString(const QString& str)
     file.write(a);
 }
 
+QDate DatabaseFile::readDate()
+{
+    qint64 jd = readValue();
+    return QDate::fromJulianDay(jd);
+}
+
+void DatabaseFile::writeDate(const QDate &date)
+{
+    qint64 jd = date.toJulianDay();
+    writeValue(jd);
+}
+
 void DatabaseFile::writeWallets(const QList<Wallet> &wallets)
 {
     writeInt(int(wallets.size()));
@@ -74,6 +86,7 @@ void DatabaseFile::writeWallets(const QList<Wallet> &wallets)
         writeString(wallet.name);
         writeValue(wallet.value);
         writeBool(wallet.external);
+        writeDate(wallet.date);
     }
 }
 
@@ -87,6 +100,7 @@ void DatabaseFile::readWallets(QList<Wallet> &wallets)
         wallet.name = readString();
         wallet.value = readValue();
         wallet.external = readBool();
+        wallet.date = readDate();
         wallets.append(wallet);
     }
 }
@@ -107,15 +121,18 @@ void DatabaseFile::writeTaggedNames(const QList<TaggedName> &arr)
 
 void DatabaseFile::readTaggedNames(QList<TaggedName> &arr)
 {
-    arr.reserve(readInt());
-    for (auto& it: arr)
+    arr.clear();
+    const int n = readInt();
+    for (int i = 0; i < n; ++i)
     {
-        it.name = readString();
-        it.tagIndices.reserve(readInt());
-        for (auto& i : it.tagIndices)
+        TaggedName t;
+        t.name = readString();
+        const int nn = readInt();
+        for (int ii = 0; ii < nn; ++ii)
         {
-            i = readInt();
+            t.tagIndices.append(readInt());
         }
+        arr.append(t);
     }
 }
 
@@ -124,7 +141,7 @@ void DatabaseFile::writeJournals(const QList<Journal> &journals)
     writeInt(int(journals.size()));
     for (const auto& journal : journals)
     {
-        writeInt(journal.date.toJulianDay());
+        writeDate(journal.date);
         writeInt(journal.locationIndex);
         writeInt(journal.walletIndex);
         writeBool(journal.isDebit);
@@ -134,29 +151,33 @@ void DatabaseFile::writeJournals(const QList<Journal> &journals)
            writeInt(entry.itemIndex);
            writeInt(entry.num);
            writeValue(entry.value);
+           writeValue(entry.balance);
         }
     }
 }
 
 void DatabaseFile::readJournals(QList<Journal> &journals)
 {
-    int num = readInt();
-    journals.reserve(num);
-    for (auto& journal : journals)
+    journals.clear();
+    const int n = readInt();
+    for (int i = 0; i < n; ++i)
     {
-        journal.date = QDate::fromJulianDay(readValue());
-        journal.locationIndex = readInt();
-        journal.walletIndex = readInt();
-        journal.isDebit = readBool();
-        journal.entries.reserve(readInt());
-        for (auto& entry : journal.entries)
+        Journal j;
+        j.date = readDate();
+        j.locationIndex = readInt();
+        j.walletIndex = readInt();
+        j.isDebit = readBool();
+        const int nn = readInt();
+        for (int ii = 0; ii < nn; ++ii)
         {
-            entry.itemIndex = readInt();
-            entry.num = readInt();
-            entry.value = readValue();
+            JournalEntry e;
+            e.itemIndex = readInt();
+            e.num = readInt();
+            e.value = readValue();
+            e.balance = readValue();
+            j.entries.append(e);
         }
-
-
+        journals.append(j);
     }
 }
 
@@ -172,9 +193,10 @@ void DatabaseFile::writeStringList(const QStringList& list)
 
 void DatabaseFile::readStringList(QStringList& list)
 {
-    list.reserve(readInt());
-    for (auto& it : list)
+    list.clear();
+    const int n = readInt();
+    for (int i = 0; i < n; ++i)
     {
-        it = readString();
+        list << readString();
     }
 }

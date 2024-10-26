@@ -29,13 +29,12 @@ public:
 signals:
 
 private:
+    QComboBox* ui_type;
     QDateEdit* ui_date;
     QLineEdit* ui_location;
     QComboBox* ui_wallet;
-    QComboBox* ui_type;
     QVBoxLayout* ui_rowBox;
     QList<JournalRow> ui_rows;
-
     QCompleter* m_itemNameCompleter;
 
 private:
