@@ -20,7 +20,8 @@ AddJournalDialog::AddJournalDialog(bool isDebit, QWidget *parent)
     ui_type->addItem("Credit");
     ui_type->setCurrentIndex(isDebit ? 0 : 1);
 
-    ui_date = new QDateEdit(QDate::currentDate());
+    ui_date = new QDateEdit();
+    ui_date->setDate(QDate::currentDate());
 
     ui_location = new QLineEdit();
     ui_location->setCompleter(db->createLocationNameCompleter(this));
@@ -88,7 +89,7 @@ JournalForm AddJournalDialog::journalForm() const
         e.itemName = row.name->text();
         e.num = row.quantity->value();
         e.value = row.value->text().toLongLong();
-        if (e.value > 0.0)
+        if (e.value != 0.0)
         {
             j.entryForms.append(e);
         }

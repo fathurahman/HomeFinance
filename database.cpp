@@ -298,6 +298,7 @@ bool Database::addJournal(const JournalForm &form)
     updateTotalValue();
 
     m_isModified = true;
+    m_activeWalletIndex = journal.walletIndex;
 
     emit journalAdded();
 
@@ -567,8 +568,17 @@ Transaction Database::transaction(const TransactionPointer& ptr) const
     tx.itemIndex = e.itemIndex;
     tx.num = e.num;
     tx.walletIndex = j.walletIndex;
-    tx.debit = j.isDebit ? e.value : 0;
-    tx.credit = j.isDebit ? 0 : e.value;
+    qint64 value = j.isDebit ? e.value : -e.value;
+    if (value > 0)
+    {
+        tx.debit = value;
+        tx.credit = 0;
+    }
+    else
+    {
+        tx.debit = 0;
+        tx.credit = -value;
+    }
     tx.balance = e.balance;
     return tx;
 }
