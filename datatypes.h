@@ -9,16 +9,16 @@
 struct Wallet
 {
     QString name;
-    qint64 value;
-    bool external;
-    QDate date;
+    bool isCredit = false;
+    qint64 initialValue = 0;
+    qint64 value = 0;
 
     Wallet() {}
-    Wallet(const QString& inName, qint64 inValue = 0, bool inExternal = false, QDate inDate = QDate::currentDate())
+    Wallet(const QString& inName, qint64 inInitialValue = 0, bool inIsCredit = false)
         : name(inName)
-        , value(inValue)
-        , external(inExternal)
-        , date(inDate)
+        , isCredit(inIsCredit)
+        , initialValue(inInitialValue)
+        , value(inInitialValue)
     {
     }
 };
@@ -35,14 +35,6 @@ struct TaggedName
 
 struct JournalEntry
 {
-    int itemIndex;
-    int num;
-    qint64 value;
-    qint64 balance;
-};
-
-struct JournalEntryForm
-{
     QString itemName;
     int num;
     qint64 value;
@@ -51,35 +43,34 @@ struct JournalEntryForm
 struct Journal
 {
     QDate date;
-    int locationIndex;
-    int walletIndex;
-    bool isDebit;
-    QList<JournalEntry> entries;
-};
-
-struct JournalForm
-{
-    QDate date;
     QString locationName;
     QString walletName;
     bool isDebit;
-    QList<JournalEntryForm> entryForms;
+    QList<JournalEntry> entries;
 };
 
 struct Transaction
 {
     QDate date;
     int locationIndex;
+    int walletIndex;
     int itemIndex;
     int num;
-    int walletIndex;
-    qint64 debit;
-    qint64 credit;
+    qint64 value;
+
     qint64 balance;
 
     QString locationName() const;
+    QString walletName() const;
     QString itemName() const;
+    qint64 debit() const;
+    qint64 credit() const;
+
 };
+
+#define TXF_FLOW_NONE   0
+#define TXF_FLOW_DEBIT  1
+#define TXF_FLOW_CREDIT 2
 
 struct TransactionFilter
 {
@@ -88,10 +79,11 @@ struct TransactionFilter
     int day = -1;
     QString locationName;
     QString itemName;
-    QString tagName;
     QString keyword;
     int walletIndex = -1;
     int flow = 0;
+
+    bool isEmpty;
 
     bool hasKeyword;
 
@@ -101,7 +93,8 @@ struct TransactionFilter
     bool hasItemName;
     int itemIndex;
 
-    int tagIndex;
+    TransactionFilter process() const;
+
 };
 
 struct TransactionPointer

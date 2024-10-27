@@ -134,7 +134,7 @@ void MainWindow::addDebitJournal()
     AddJournalDialog d(true, this);
     if (d.exec())
     {
-        db->addJournal(d.journalForm());
+        db->addJournal(d.journal());
     }
 }
 
@@ -143,7 +143,7 @@ void MainWindow::addCreditJournal()
     AddJournalDialog d(false, this);
     if (d.exec())
     {
-        db->addJournal(d.journalForm());
+        db->addJournal(d.journal());
     }
 }
 

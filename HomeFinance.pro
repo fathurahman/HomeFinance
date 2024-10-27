@@ -14,11 +14,11 @@ SOURCES += \
     application.cpp \
     database.cpp \
     databasefile.cpp \
+    datatypes.cpp \
     main.cpp \
     mainwindow.cpp \
     transactiontablemodel.cpp \
     filterwidget.cpp \
-    mainwidget.cpp \
     transactiontableview.cpp \
     viewwalletsdialog.cpp
 
@@ -32,7 +32,6 @@ HEADERS += \
     mainwindow.h \
     transactiontablemodel.h \
     filterwidget.h \
-    mainwidget.h \
     transactiontableview.h \
     viewwalletsdialog.h
 

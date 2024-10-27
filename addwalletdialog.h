@@ -21,8 +21,7 @@ signals:
 private:
     QLineEdit* ui_name;
     QLineEdit* ui_value;
-    QCheckBox* ui_external;
-    QDateEdit* ui_date;
+    QCheckBox* ui_isCredit;
     QPushButton* ui_addButton;
 
 private slots:

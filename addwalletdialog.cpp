@@ -18,17 +18,14 @@ AddWalletDialog::AddWalletDialog(QWidget *parent)
 
     ui_value = app->createNumLineEdit();
 
-    ui_external = new QCheckBox();
-    ui_external->setChecked(false);
+    ui_isCredit = new QCheckBox();
+    ui_isCredit->setChecked(false);
 
-    ui_date = new QDateEdit();
-    ui_date->setDate(QDate::currentDate());
 
     auto* form = new QFormLayout;
-    form->addRow("Date:", ui_date);
     form->addRow("Name:", ui_name);
     form->addRow("Value:", ui_value);
-    form->addRow("External:", ui_external);
+    form->addRow("Credit Account:", ui_isCredit);
 
     auto* add = new QPushButton("Add");
     connect(add, &QPushButton::clicked, this, &QDialog::accept);
@@ -56,8 +53,7 @@ Wallet AddWalletDialog::wallet() const
     return Wallet(
                 ui_name->text(),
                 ui_value->text().toLongLong(),
-                ui_external->isChecked(),
-                ui_date->date());
+                ui_isCredit->isChecked());
 }
 
 void AddWalletDialog::onNameEdited(const QString &text)

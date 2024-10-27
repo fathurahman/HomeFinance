@@ -9,12 +9,11 @@ TransactionTableView::TransactionTableView(QWidget *parent)
 {
     setModel(app->transactionTableModel());
 
-    setColumnWidth(0, 260);
-    setColumnWidth(1, 220);
-    for (int i = 2; i < 4; ++i)
+    for (int i = 1; i <= 5; ++i)
     {
         setColumnWidth(i, 130);
     }
+    setColumnWidth(2, 200);
 
     auto fusion = QStyleFactory::create("fusion");
     horizontalHeader()->setStyle(fusion);

@@ -16,80 +16,62 @@ public:
     int version() const;
 
     inline bool isModified() const { return m_isModified; }
-
     inline QString lastFilePath() const { return m_lastFilePath; }
-
     bool load(const QString& path);
     bool save(const QString& path) const;
 
     int walletsNum() const;
-
     QStringList walletNames() const;
-
     const Wallet* wallet(int index) const;
-
     const Wallet *wallet(const QString& name) const;
-
     bool addWallet(const Wallet& wallet);
-
     inline int activeWalletIndex() const { return m_activeWalletIndex; }
 
     inline qint64 totalValue() const { return m_totalValue; }
 
-    inline QList<TaggedName>& items() { return m_items; }
-
-    QString itemName(int index, int num = 0) const;
-
+    inline const QStringList& itemNames() const { return m_itemNames; }
     QCompleter* createItemNameCompleter(QObject* parent) const;
 
-    inline QList<TaggedName>& locations() { return m_locations; }
-
-    QString locationName(int locationIndex) const;
-
+    inline const QStringList& locationNames() const { return m_locationNames; }
     QCompleter* createLocationNameCompleter(QObject* parent);   
+    inline int activeLocationIndex() const { return m_activeLocationIndex; }
 
-    QCompleter* createTagNameCompleter(QObject* parent);
+    bool addJournal(const Journal& journal);
 
-    bool addJournal(const JournalForm& form);
-
-    QList<TransactionPointer> filterTransactions(const TransactionFilter& filter) const;
-
-    Transaction transaction(const TransactionPointer& ptr) const;
+    inline const QList<Transaction> transactions() const { return m_transactions; }
+    inline const Transaction& transaction(int index) const { return m_transactions[index]; }
+    QList<int> filterTransactions(const TransactionFilter& filter) const;
 
 signals:
-    void loading();
-    void loaded();
-    void totalValueChanged();
     void walletAdded();
-    void journalAdded();
+    void transactionAdded();
+    void totalValueChanged();
 
 private:
     QList<Wallet> m_wallets;
-    QList<TaggedName> m_items;
-    QList<TaggedName> m_locations;
-    QList<Journal> m_journals;
-    QStringList m_tagNames;
+    QStringList m_itemNames;
+    QStringList m_locationNames;
+    QList<Transaction> m_transactions;
 
     mutable bool m_isModified = false;
     mutable QString m_lastFilePath;
-    int m_activeWalletIndex = 0;
+    mutable int m_activeWalletIndex = 0;
+    mutable int m_activeLocationIndex = 0;
     qint64 m_totalValue = 0;
 
 private:
     void updateTotalValue(bool forceUpdate = false);
+    void updateTransactionBalances();
 
     int getOrAddWalletIndexByName(const QString& name);
     int getOrAddLocationIndexByName(const QString& name);
     int getOrAddItemIndexByName(const QString& name);
 
-    TransactionFilter normalizeFilter(const TransactionFilter& filter) const;
     bool filterDate(const QDate &date, const TransactionFilter& filter) const;
     bool filterLocationIndex(int index, const TransactionFilter& filter) const;
     bool filterItemIndex(int index, const TransactionFilter& filter) const;
-    bool filterJournal(const Journal& journal, const TransactionFilter& filter) const;
-    bool filterJournalEntry(const JournalEntry& entry, const TransactionFilter& filter) const;
-    bool checkJournalKey(const Journal& journal, const TransactionFilter& filter) const;
-    bool checkJournalEntryKey(const JournalEntry& entry, const TransactionFilter& filter) const;
+    bool filterKeyword(const Transaction& transaction, const TransactionFilter& filter) const;
+    bool filterTransaction(const Transaction& transaction, const TransactionFilter& filter) const;
 };
 
 extern Database *db;

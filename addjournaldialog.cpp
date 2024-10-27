@@ -76,22 +76,22 @@ AddJournalDialog::AddJournalDialog(bool isDebit, QWidget *parent)
 }
 
 
-JournalForm AddJournalDialog::journalForm() const
+Journal AddJournalDialog::journal() const
 {
-    JournalForm j;
+    Journal j;
     j.date = ui_date->date();
     j.locationName = ui_location->text();
     j.walletName = ui_wallet->currentText();
     j.isDebit = ui_type->currentIndex() == 0;
     for (const auto& row : ui_rows)
     {
-        JournalEntryForm e;
+        JournalEntry e;
         e.itemName = row.name->text();
         e.num = row.quantity->value();
         e.value = row.value->text().toLongLong();
         if (e.value != 0.0)
         {
-            j.entryForms.append(e);
+            j.entries.append(e);
         }
     }
     return j;

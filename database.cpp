@@ -3,19 +3,9 @@
 #include "database.h"
 #include "databasefile.h"
 
-#define DB_VERSION 1
+#define DB_VERSION 2
 
 Database *db = nullptr;
-
-QString Transaction::locationName() const
-{
-    return db->locationName(locationIndex);
-}
-
-QString Transaction::itemName() const
-{
-    return db->itemName(itemIndex, num);
-}
 
 Database::Database(QObject *parent)
     : QObject{parent}
@@ -32,33 +22,34 @@ bool Database::load(const QString& path)
         return false;
     }
 
-    int firstInt = file.readInt();
+    const int firstInt = file.readInt();
     if (firstInt != 0)
     {
+        qWarning() << "The first int in database file is not zero";
         return false;
     }
 
-    int version = file.readInt();
+    const int version = file.readInt();
     if (version != DB_VERSION)
     {
+        qWarning() << "Invalid database file version, found:" << version << "expecting:" << DB_VERSION;
         return false;
     }
 
-    emit loading();
-
     file.readWallets(m_wallets);
-    file.readTaggedNames(m_items);
-    file.readTaggedNames(m_locations);
-    file.readJournals(m_journals);
-    file.readStringList(m_tagNames);
+    file.readStringList(m_itemNames);
+    file.readStringList(m_locationNames);
+    file.readTransactions(m_transactions);
 
     m_isModified = false;
     m_lastFilePath = path;
+
     m_activeWalletIndex = (m_wallets.size() == 0) ? -1 : 0;
+    m_activeLocationIndex = (m_locationNames.size() == 0) ? -1 : 0;
 
-    updateTotalValue(true);
-
-    emit loaded();
+    updateTransactionBalances();
+    emit walletAdded();
+    emit transactionAdded();
 
     return true;
 }
@@ -74,10 +65,9 @@ bool Database::save(const QString &path) const
     file.writeInt(0);
     file.writeInt(DB_VERSION);
     file.writeWallets(m_wallets);
-    file.writeTaggedNames(m_items);
-    file.writeTaggedNames(m_locations);
-    file.writeJournals(m_journals);
-    file.writeStringList(m_tagNames);
+    file.writeStringList(m_itemNames);
+    file.writeStringList(m_locationNames);
+    file.writeTransactions(m_transactions);
 
     m_isModified = false;
     m_lastFilePath = path;
@@ -141,64 +131,22 @@ bool Database::addWallet(const Wallet& wallet)
     return true;
 }
 
-QString Database::itemName(int index, int num) const
-{
-    QString str;
-    if (index >= 0 && index < m_items.size())
-    {
-        str = m_items[index].name;
-    }
-    if (num > 1)
-    {
-        str = QString("%1 x%2").arg(str).arg(num);
-    }
-    return str;
-}
-
 QCompleter *Database::createItemNameCompleter(QObject *parent) const
 {
-    if (m_items.isEmpty())
+    if (m_itemNames.isEmpty())
     {
         return nullptr;
     }
-    QStringList names;
-    for (const auto& item : m_items)
-    {
-        names.append(item.name);
-    }
-    return new QCompleter(names, parent);
-}
-
-QString Database::locationName(int index) const
-{
-    if (index < 0 || index >= m_locations.size())
-    {
-        return QString();
-    }
-    return m_locations[index].name;
+    return new QCompleter(m_itemNames, parent);
 }
 
 QCompleter *Database::createLocationNameCompleter(QObject *parent)
-{
-    if (m_locations.isEmpty())
+{    
+    if (m_locationNames.isEmpty())
     {
         return nullptr;
     }
-    QStringList names;
-    for (const auto& loc : m_locations)
-    {
-        names.append(loc.name);
-    }
-    return new QCompleter(names, parent);
-}
-
-QCompleter *Database::createTagNameCompleter(QObject *parent)
-{
-    if (m_tagNames.isEmpty())
-    {
-        return nullptr;
-    }
-    return new QCompleter(m_tagNames, parent);
+    return new QCompleter(m_locationNames, parent);
 }
 
 int Database::getOrAddWalletIndexByName(const QString &name)
@@ -225,16 +173,13 @@ int Database::getOrAddLocationIndexByName(const QString &name)
     {
         return -1;
     }
-    const int n = m_locations.size();
-    for (int i = 0; i < n; ++i)
+    const int index = m_locationNames.indexOf(name);
+    if (index >= 0)
     {
-        if (m_locations[i].name == name)
-        {
-            return i;
-        }
+        return index;
     }
-    m_locations.append(TaggedName(name));
-    return m_locations.size() - 1;
+    m_locationNames.append(name);
+    return m_locationNames.size() - 1;
 }
 
 int Database::getOrAddItemIndexByName(const QString &name)
@@ -243,154 +188,86 @@ int Database::getOrAddItemIndexByName(const QString &name)
     {
         return -1;
     }
-    const int n = m_items.size();
-    for (int i = 0; i < n; ++i)
+    const int index = m_itemNames.indexOf(name);
+    if (index >= 0)
     {
-        if (m_items[i].name == name)
-        {
-            return i;
-        }
+        return index;
     }
-    m_items.append(TaggedName(name));
-    return m_items.size() - 1;
+    m_itemNames.append(name);
+    return m_itemNames.size() - 1;
 }
 
 
-bool Database::addJournal(const JournalForm &form)
+bool Database::addJournal(const Journal &journal)
 {
-    Journal journal;
+    Transaction tx;
+    tx.date = journal.date;
+    tx.locationIndex = getOrAddLocationIndexByName(journal.locationName);
+    tx.walletIndex = getOrAddWalletIndexByName(journal.walletName);
 
-    journal.walletIndex = getOrAddWalletIndexByName(form.walletName);
-    if (journal.walletIndex < 0)
+    int i = -1;
+    if (tx.date < QDate::currentDate() && m_transactions.isEmpty() == false)
+    {
+        for (i = m_transactions.size() - 1; i >= 0; --i)
+        {
+            if (m_transactions[i].date <= tx.date)
+            {
+                break;
+            }
+        }
+        i += 1;
+        if (i == m_transactions.size() - 1)
+        {
+            i = -1;
+        }
+    }
+
+    if (tx.walletIndex < 0)
     {
         return false;
-    }    
-    Wallet& wallet = m_wallets[journal.walletIndex];
-
-    journal.date = form.date;
-
-    journal.locationIndex = getOrAddLocationIndexByName(form.locationName);
-
-    journal.isDebit = form.isDebit;
-
-    for (const auto& eform : form.entryForms)
+    }        
+    Wallet& wallet = m_wallets[tx.walletIndex];
+    const qint64 mult = journal.isDebit ? 1 : -1;
+    for (const auto& e : journal.entries)
     {
-        JournalEntry e;
-        e.itemIndex = getOrAddItemIndexByName(eform.itemName);
-        e.num = eform.num;
-        e.value = eform.value;
-        if (e.value == 0)
+        if (e.value == 0.0)
         {
             continue;
         }
-        auto value = journal.isDebit ? e.value : -e.value;
-        wallet.value += value;
-        e.balance = wallet.value;
-        journal.entries.append(e);
-    }
-    if (journal.entries.isEmpty())
-    {
-        return false;
+
+        tx.itemIndex = getOrAddItemIndexByName(e.itemName);
+        tx.num = e.num;
+        tx.value = e.value * mult;
+
+        if (i < 0)
+        {
+            m_transactions.append(tx);
+        }
+        else
+        {
+            m_transactions.insert(i, tx);
+            i++;
+        }
+
+        wallet.value += tx.value;
+        tx.balance = wallet.value;
     }
 
-    m_journals.append(journal);
 
-    updateTotalValue();
+    updateTransactionBalances();
 
     m_isModified = true;
-    m_activeWalletIndex = journal.walletIndex;
 
-    emit journalAdded();
+    m_activeWalletIndex = tx.walletIndex;
+    m_activeLocationIndex = (tx.locationIndex >= 0) ? tx.locationIndex : m_activeLocationIndex;
+
+    emit transactionAdded();
 
     return true;
 }
 
-TransactionFilter Database::normalizeFilter(const TransactionFilter& filter) const
-{
-    TransactionFilter f = filter;
-
-    if (f.locationName.isEmpty())
-    {
-        f.hasLocationName = false;
-        f.locationIndex = -1;
-    }
-    else
-    {
-        f.hasLocationName = true;
-        f.locationIndex = -1;
-        const int n = m_locations.size();
-        for (int i = 0; i < n; ++i)
-        {
-            const auto& loc = m_locations[i];
-            if (loc.name == f.locationName)
-            {
-                f.locationIndex = i;
-                break;
-            }
-        }
-    }
-
-    if (f.itemName.isEmpty())
-    {
-        f.hasItemName = false;
-        f.itemIndex = -1;
-    }
-    else
-    {
-        f.hasItemName = true;
-        f.itemIndex = -1;
-        const int n = m_items.size();
-        for (int i = 0; i < n; ++i)
-        {
-            const auto& item = m_items[i];
-            if  (item.name == f.itemName)
-            {
-                f.itemIndex = i;
-                break;
-            }
-        }
-    }
-
-    f.tagIndex = -1;
-    if (f.tagName.isEmpty() == false)
-    {
-        const int n = m_tagNames.size();
-        for (int i = 0; i < n; ++i)
-        {
-            if (f.tagName == m_tagNames[i])
-            {
-                f.tagIndex = i;
-                break;
-            }
-        }
-    }
-
-    f.hasKeyword = false;
-    if (filter.keyword.isEmpty() == false)
-    {
-        if (filter.keyword == "debit")
-        {
-            f.keyword = QString();
-            f.flow = 1;
-        }
-        else if (filter.keyword == "credit")
-        {
-            f.keyword = QString();
-            f.flow = 2;
-        }
-        else
-        {
-            f.hasKeyword = true;
-        }
-    }
-
-
-    return f;
-}
-
 bool Database::filterDate(const QDate& d, const TransactionFilter& f) const
 {
-
     if (f.year  >= 0 && f.year  != d.year())
     {
         return false;
@@ -406,8 +283,6 @@ bool Database::filterDate(const QDate& d, const TransactionFilter& f) const
     return true;
 }
 
-
-
 bool Database::filterLocationIndex(int index, const TransactionFilter& f) const
 {
     if (!f.hasLocationName)
@@ -422,7 +297,7 @@ bool Database::filterLocationIndex(int index, const TransactionFilter& f) const
     {
         return f.locationIndex == index;
     }
-    return f.locationName == m_locations[index].name;
+    return m_locationNames[index].contains(f.locationName, Qt::CaseInsensitive);
 }
 
 bool Database::filterItemIndex(int index, const TransactionFilter& f) const
@@ -439,73 +314,35 @@ bool Database::filterItemIndex(int index, const TransactionFilter& f) const
     {
         return f.itemIndex == index;
     }
-    return m_items[index].name.contains(f.itemName);
+    return m_itemNames[index].contains(f.itemName, Qt::CaseInsensitive);
 }
 
-bool Database::filterJournal(const Journal& j, const TransactionFilter &f) const
+bool Database::filterKeyword(const Transaction &t, const TransactionFilter &f) const
 {
-    if (filterDate(j.date, f) == false)
-    {
-        return false;
-    }
-    if (filterLocationIndex(j.locationIndex, f) == false)
-    {
-        return false;
-    }
-    if (f.walletIndex >= 0 && j.walletIndex != f.walletIndex)
-    {
-        return false;
-    }
-    if (f.flow == 1 && j.isDebit == false)
-    {
-        return false;
-    }
-    if (f.flow == 2 && j.isDebit)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool Database::filterJournalEntry(const JournalEntry &entry, const TransactionFilter &filter) const
-{
-    if (filterItemIndex(entry.itemIndex, filter) == false)
-    {
-        return false;
-    }
-    if (filter.tagIndex >= 0)
-    {
-        if (entry.itemIndex < 0)
-        {
-            return false;
-        }
-        const auto& item = m_items[entry.itemIndex];
-        if (item.tagIndices.contains(filter.tagIndex) == false)
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool Database::checkJournalKey(const Journal &journal, const TransactionFilter &filter) const
-{
-    if (filter.hasKeyword == false)
+    if (!f.hasKeyword)
     {
         return true;
     }
-    if (journal.locationIndex >= 0)
+    if (t.walletIndex >= 0)
     {
-        const auto& name = m_locations[journal.locationIndex].name;
-        if (name.contains(filter.keyword))
+        const QString& name = m_wallets[t.walletIndex].name;
+        if (name.contains(f.keyword, Qt::CaseInsensitive))
         {
             return true;
         }
     }
-    if (journal.walletIndex >= 0)
+    if (t.locationIndex >= 0)
     {
-        const auto& name = m_wallets[journal.walletIndex].name;
-        if (name.contains(filter.keyword))
+        const QString& name = m_locationNames[t.locationIndex];
+        if (name.contains(f.keyword, Qt::CaseInsensitive))
+        {
+            return true;
+        }
+    }
+    if (t.itemIndex >= 0)
+    {
+        const QString& name = m_itemNames[t.itemIndex];
+        if (name.contains(f.keyword, Qt::CaseInsensitive))
         {
             return true;
         }
@@ -513,82 +350,62 @@ bool Database::checkJournalKey(const Journal &journal, const TransactionFilter &
     return false;
 }
 
-bool Database::checkJournalEntryKey(const JournalEntry &entry, const TransactionFilter &filter) const
+bool Database::filterTransaction(const Transaction &t, const TransactionFilter &f) const
 {
-    if (filter.hasKeyword == false)
+    if (f.walletIndex >= 0 && t.walletIndex != f.walletIndex)
     {
-        return true;
+        return false;
     }
-    if (entry.itemIndex >= 0)
+    if (f.flow == 1 && t.value <= 0.0)
     {
-        const auto& name = m_items[entry.itemIndex].name;
-        if (name.contains(filter.keyword))
-        {
-            return true;
-        }
+        return false;
     }
-    return false;
+    if (f.flow == 2 && t.value >= 0.0)
+    {
+        return false;
+    }
+    if (filterDate(t.date, f) == false)
+    {
+        return false;
+    }
+    if (filterLocationIndex(t.locationIndex, f) == false)
+    {
+        return false;
+    }
+    if (filterItemIndex(t.itemIndex, f) == false)
+    {
+        return false;
+    }
+    return filterKeyword(t, f);
 }
 
-QList<TransactionPointer> Database::filterTransactions(const TransactionFilter &filter) const
+QList<int> Database::filterTransactions(const TransactionFilter &filter) const
 {
-    QList<TransactionPointer> ret;
-    auto f = normalizeFilter(filter);
-    const int n = m_journals.size();
+    QList<int> ret;
+    const auto f = filter.process();
+    const int n = m_transactions.size();
     for (int i = 0; i < n; ++i)
     {
-        const auto& j = m_journals[i];
-        if (filterJournal(j, f))
+        const auto& t = m_transactions[i];
+        if (filterTransaction(t, f))
         {
-            bool hasJournalKey = checkJournalKey(j, f);
-            const int nn = j.entries.size();
-            for (int ii = 0; ii < nn; ++ii)
-            {
-                const auto& e = j.entries.at(ii);
-                if (filterJournalEntry(e, f))
-                {
-                    if (hasJournalKey || checkJournalEntryKey(e, f))
-                    {
-                        ret.append(TransactionPointer(i, ii));
-                    }
-                }
-            }
+            ret.append(i);
         }
     }
     return ret;
 }
 
-Transaction Database::transaction(const TransactionPointer& ptr) const
-{
-    const auto& j = m_journals[ptr.journalIndex];
-    const auto& e = j.entries[ptr.entryIndex];
-    Transaction tx;
-    tx.date = j.date;
-    tx.locationIndex = j.locationIndex;
-    tx.itemIndex = e.itemIndex;
-    tx.num = e.num;
-    tx.walletIndex = j.walletIndex;
-    qint64 value = j.isDebit ? e.value : -e.value;
-    if (value > 0)
-    {
-        tx.debit = value;
-        tx.credit = 0;
-    }
-    else
-    {
-        tx.debit = 0;
-        tx.credit = -value;
-    }
-    tx.balance = e.balance;
-    return tx;
-}
 
 void Database::updateTotalValue(bool forceUpdate)
 {
     qint64 totalValue = 0;
     for (const auto& wallet : m_wallets)
     {
-        if (wallet.external == false)
+        if (wallet.isCredit)
+        {
+            totalValue -= wallet.value;
+        }
+        else
         {
             totalValue += wallet.value;
         }
@@ -598,5 +415,20 @@ void Database::updateTotalValue(bool forceUpdate)
         m_totalValue = totalValue;
         emit totalValueChanged();
     }
+}
+
+void Database::updateTransactionBalances()
+{
+    for (auto& wallet : m_wallets)
+    {
+        wallet.value = wallet.initialValue;
+    }
+    for (auto& tx : m_transactions)
+    {
+        auto& wallet = m_wallets[tx.walletIndex];
+        wallet.value += tx.value;
+        tx.balance = wallet.value;
+    }
+    updateTotalValue();
 }
 

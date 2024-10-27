@@ -28,17 +28,17 @@ public:
     QDate readDate();
     void writeDate(const QDate& date);
 
+    void writeStringList(const QStringList& list);
+    void readStringList(QStringList& list);
+
     void writeWallets(const QList<Wallet>& wallets);
     void readWallets(QList<Wallet>& wallets);
 
-    void writeTaggedNames(const QList<TaggedName>& taggedNames);
-    void readTaggedNames(QList<TaggedName>& taggedNames);
+    Transaction readTransaction();
+    void writeTransaction(const Transaction& tx);
 
-    void writeJournals(const QList<Journal>& journals);
-    void readJournals(QList<Journal>& journals);
-
-    void writeStringList(const QStringList& list);
-    void readStringList(QStringList& list);
+    void readTransactions(QList<Transaction>& list);
+    void writeTransactions(const QList<Transaction>& list);
 
 
 private:

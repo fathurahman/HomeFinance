@@ -24,7 +24,7 @@ class AddJournalDialog : public QDialog
 public:
     explicit AddJournalDialog(bool isDebit, QWidget *parent = nullptr);
 
-    JournalForm journalForm() const;
+    Journal journal() const;
 
 signals:
 

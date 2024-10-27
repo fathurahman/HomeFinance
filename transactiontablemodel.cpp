@@ -5,7 +5,7 @@ TransactionTableModel::TransactionTableModel(QObject *parent)
     : QAbstractTableModel{parent}
 {
     populatePointers();
-    connect(db, &Database::journalAdded, this, &TransactionTableModel::populatePointers);
+    connect(db, &Database::transactionAdded, this, &TransactionTableModel::populatePointers);
 }
 
 void TransactionTableModel::setFilter(const TransactionFilter &filter)
@@ -21,7 +21,7 @@ int TransactionTableModel::rowCount(const QModelIndex &) const
 
 int TransactionTableModel::columnCount(const QModelIndex &) const
 {
-    return 6;
+    return 7;
 }
 
 QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -32,16 +32,18 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
     if (orientation == Qt::Horizontal) {
         switch(section) {
         case 0:
-            return "Time & Place";
+            return "Date";
         case 1:
-            return "Item";
+            return "Location";
         case 2:
-            return "Debit";
+            return "Item";
         case 3:
-            return "Credit";
+            return "Debit";
         case 4:
-            return "Balance";
+            return "Credit";
         case 5:
+            return "Balance";
+        case 6:
             return "Wallet";
         default:
             return QVariant();
@@ -61,32 +63,31 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         switch(col)
         {
         case 0:
-            if (t.locationIndex < 0) return t.date;
-            return QString("%1, %2").arg(t.date.toString("dd/MM/yyyy")).arg(db->locationName(t.locationIndex));
+            return t.date;
         case 1:
-            return db->itemName(t.itemIndex, t.num);
+            return t.locationName();
         case 2:
-            if (t.debit == 0) return QVariant();
-            return QString("Rp. %L1").arg(t.debit);
+            return t.itemName();
         case 3:
-            if (t.credit == 0) return QVariant();
-            return QString("Rp. %L1").arg(t.credit);
+            return (t.value > 0.0) ? QString("Rp. %L1").arg(t.debit()) : QVariant();
         case 4:
-            return QString("Rp. %L1").arg(t.balance);
+            return (t.value < 0.0) ? QString("Rp. %L1").arg(t.credit()) : QVariant();
         case 5:
-            return db->wallet(t.walletIndex)->name;
+            return QString("Rp. %L1").arg(t.balance);
+        case 6:
+            return t.walletName();
         default:
             return QVariant();
         }
     }
     else if (role == Qt::TextAlignmentRole)
     {
-        if (col == 2|| col == 3 || col == 4)
+        if (col == 3|| col == 4 || col == 5)
         {
             const int a = Qt::AlignRight | Qt::AlignVCenter;
             return a;
         }
-        else if (col == 5)
+        else if (col == 6)
         {
             return { Qt::AlignCenter };
         }

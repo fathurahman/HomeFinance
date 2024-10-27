@@ -23,7 +23,7 @@ public slots:
 
 private:
     TransactionFilter m_filter;
-    QList<TransactionPointer> m_pointers;
+    QList<int> m_pointers;
 };
 
 #endif // TRANSACTIONTABLEMODEL_H
