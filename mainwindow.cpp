@@ -15,17 +15,18 @@
 #include "addjournaldialog.h"
 #include "viewwalletsdialog.h"
 #include "transactiontablemodel.h"
-#include "mainwidget.h"
+#include "transactiontableview.h"
+#include "filterwidget.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     updateWindowTitle();
-    setMinimumSize(1280, 720);
+    setMinimumSize(1024, 720);
     createActions();
     createMenus();
+    createCentralWidget();
     connect(db, &Database::totalValueChanged, this, &MainWindow::updateWindowTitle);
-    setCentralWidget(new MainWidget);
 }
 
 MainWindow::~MainWindow()
@@ -214,3 +215,18 @@ void MainWindow::createMenus()
     m_databaseMenu->addAction(m_actViewWallets);
 }
 
+void MainWindow::createCentralWidget()
+{
+    auto* filter = new FilterWidget;
+    auto* table = new TransactionTableView;
+
+    auto* layout = new QVBoxLayout;
+    layout->addWidget(filter);
+    layout->addWidget(table);
+
+    auto* widget = new QWidget;
+    widget->setLayout(layout);
+
+    setCentralWidget(widget);
+
+}

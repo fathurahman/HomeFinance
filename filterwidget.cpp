@@ -21,7 +21,7 @@ FilterWidget::FilterWidget(QWidget* parent)
     ui_day->setValue(-1);
 
     ui_wallet = new QComboBox;
-    ui_wallet->setMinimumWidth(160);
+    ui_wallet->setMinimumWidth(120);
     updateWallet();
     connect(db, &Database::walletAdded, this, &FilterWidget::updateWallet);
 

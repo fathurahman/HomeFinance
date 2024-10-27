@@ -19,6 +19,7 @@ SOURCES += \
     transactiontablemodel.cpp \
     filterwidget.cpp \
     mainwidget.cpp \
+    transactiontableview.cpp \
     viewwalletsdialog.cpp
 
 HEADERS += \
@@ -32,6 +33,7 @@ HEADERS += \
     transactiontablemodel.h \
     filterwidget.h \
     mainwidget.h \
+    transactiontableview.h \
     viewwalletsdialog.h
 
 # Default rules for deployment.
