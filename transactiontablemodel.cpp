@@ -5,7 +5,7 @@ TransactionTableModel::TransactionTableModel(QObject *parent)
     : QAbstractTableModel{parent}
 {
     populatePointers();
-    connect(db, &Database::transactionAdded, this, &TransactionTableModel::populatePointers);
+    connect(db, &Database::transactionsModified, this, &TransactionTableModel::populatePointers);
 }
 
 void TransactionTableModel::setFilter(const TransactionFilter &filter)

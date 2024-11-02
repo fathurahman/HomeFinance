@@ -21,6 +21,7 @@ private:
     QAction* m_actAddDebitJournal;
     QAction* m_actAddCreditJournal;
     QAction* m_actViewWallets;
+    QAction* m_actSortTransactions;
 
     QMenu* m_fileMenu;
     QMenu* m_databaseMenu;

@@ -49,7 +49,7 @@ bool Database::load(const QString& path)
 
     updateTransactionBalances();
     emit walletAdded();
-    emit transactionAdded();
+    emit transactionsModified();
 
     return true;
 }
@@ -261,7 +261,7 @@ bool Database::addJournal(const Journal &journal)
     m_activeWalletIndex = tx.walletIndex;
     m_activeLocationIndex = (tx.locationIndex >= 0) ? tx.locationIndex : m_activeLocationIndex;
 
-    emit transactionAdded();
+    emit transactionsModified();
 
     return true;
 }
@@ -395,6 +395,50 @@ QList<int> Database::filterTransactions(const TransactionFilter &filter) const
     return ret;
 }
 
+void Database::deleteTransaction(int index)
+{
+    m_transactions.remove(index);
+    emit transactionsModified();
+}
+
+void Database::editTransaction(int index, const Transaction &tx)
+{
+    // TODO : edit
+}
+
+void Database::sortTransactions()
+{
+    auto cmp = [](const Transaction& a, const Transaction& b)
+    {
+        if (a.date < b.date)
+        {
+            return true;
+        }
+        else if (a.date == b.date)
+        {
+            if (a.walletIndex < b.walletIndex)
+            {
+                return true;
+            }
+            else if (a.walletIndex == b.walletIndex)
+            {
+                if (a.locationIndex < b.locationIndex)
+                {
+                    return true;
+                }
+                else if (a.locationIndex == b.locationIndex)
+                {
+                    return a.value > b.value;
+                }
+            }
+        }
+        return false;
+    };
+    std::sort(m_transactions.begin(), m_transactions.end(), cmp);
+    updateTransactionBalances();
+    emit transactionsModified();
+}
+
 
 void Database::updateTotalValue(bool forceUpdate)
 {
@@ -414,6 +458,19 @@ void Database::updateTotalValue(bool forceUpdate)
     {
         m_totalValue = totalValue;
         emit totalValueChanged();
+    }
+}
+
+void Database::updateTransactionBalancesForWallet(int walletIndex)
+{
+    auto& wallet = m_wallets[walletIndex];
+    for (auto& tx : m_transactions)
+    {
+        if (tx.walletIndex == walletIndex)
+        {
+            wallet.value += tx.value;
+            tx.balance = wallet.value;
+        }
     }
 }
 

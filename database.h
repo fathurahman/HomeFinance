@@ -42,10 +42,16 @@ public:
     inline const Transaction& transaction(int index) const { return m_transactions[index]; }
     QList<int> filterTransactions(const TransactionFilter& filter) const;
 
+    void deleteTransaction(int index);
+    void editTransaction(int index, const Transaction& tx);
+
 signals:
     void walletAdded();
-    void transactionAdded();
+    void transactionsModified();
     void totalValueChanged();
+
+public slots:
+    void sortTransactions();
 
 private:
     QList<Wallet> m_wallets;
@@ -60,7 +66,8 @@ private:
     qint64 m_totalValue = 0;
 
 private:
-    void updateTotalValue(bool forceUpdate = false);
+    void updateTotalValue(bool forceUpdate = false);    
+    void updateTransactionBalancesForWallet(int walletIndex);
     void updateTransactionBalances();
 
     int getOrAddWalletIndexByName(const QString& name);

@@ -68,6 +68,9 @@ struct Transaction
 
 };
 
+
+
+
 #define TXF_FLOW_NONE   0
 #define TXF_FLOW_DEBIT  1
 #define TXF_FLOW_CREDIT 2

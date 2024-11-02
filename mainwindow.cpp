@@ -194,6 +194,9 @@ void MainWindow::createActions()
     m_actViewWallets->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_W));
     m_actViewWallets->setStatusTip("View all wallets in the database");
     connect(m_actViewWallets, &QAction::triggered, this, &MainWindow::viewWallets);
+
+    m_actSortTransactions = new QAction("Sort Transactions", this);
+    connect(m_actSortTransactions, &QAction::triggered, db, &Database::sortTransactions);
 }
 
 void MainWindow::createMenus()
@@ -213,6 +216,8 @@ void MainWindow::createMenus()
     m_databaseMenu->addAction(m_actAddCreditJournal);
     m_databaseMenu->addSeparator();
     m_databaseMenu->addAction(m_actViewWallets);
+    m_databaseMenu->addSeparator();
+    m_databaseMenu->addAction(m_actSortTransactions);
 }
 
 void MainWindow::createCentralWidget()
