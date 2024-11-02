@@ -4,6 +4,8 @@
 #include <QStyleFactory>
 #include <QHeaderView>
 #include <QMenu>
+#include <QMessageBox>
+#include "edittransactiondialog.h"
 
 TransactionTableView::TransactionTableView(QWidget *parent)
     : QTableView{parent}
@@ -43,10 +45,25 @@ void TransactionTableView::onCustomContextMenuRequested(QPoint pos)
 
 void TransactionTableView::editSelected()
 {
-
+    // TODO: edit transaction dialog
 }
 
 void TransactionTableView::deleteSelected()
 {
+    const int index = m_selectedIndex.row();
+    const Transaction tx = db->transaction(index);
+    const QString text = QString("Delete trx on %1?").arg(tx.date.toString());
+    const QString info = QString("@%1\n%2\nRp. %L3\n(%4)").arg(tx.locationName()).arg(tx.itemName()).arg(tx.value).arg(tx.walletName());
 
+    QMessageBox box;
+    box.setText(text);
+    box.setInformativeText(info);
+    box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    box.setDefaultButton(QMessageBox::Cancel);
+
+    const int ret = box.exec();
+    if (ret == QMessageBox::Ok)
+    {
+        db->deleteTransaction(index);
+    }
 }

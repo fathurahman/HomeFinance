@@ -66,6 +66,16 @@ struct Transaction
     qint64 debit() const;
     qint64 credit() const;
 
+    inline bool operator==(const Transaction& o) const
+    {
+        return date == o.date
+                && locationIndex == o.locationIndex
+                && walletIndex == o.walletIndex
+                && itemIndex == o.itemIndex
+                && num == o.num
+                && value == o.value;
+    }
+
 };
 
 

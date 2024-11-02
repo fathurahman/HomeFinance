@@ -261,8 +261,6 @@ bool Database::addJournal(const Journal &journal)
     m_activeWalletIndex = tx.walletIndex;
     m_activeLocationIndex = (tx.locationIndex >= 0) ? tx.locationIndex : m_activeLocationIndex;
 
-    emit transactionsModified();
-
     return true;
 }
 
@@ -397,46 +395,63 @@ QList<int> Database::filterTransactions(const TransactionFilter &filter) const
 
 void Database::deleteTransaction(int index)
 {
+    m_isModified = true;
     m_transactions.remove(index);
     emit transactionsModified();
 }
 
 void Database::editTransaction(int index, const Transaction &tx)
 {
-    // TODO : edit
+    Transaction prev = m_transactions[index];
+    if (tx == prev)
+    {
+        return;
+    }
+    m_isModified = true;
+    m_transactions[index] = tx;
+    if (prev.date != tx.date)
+    {
+        sortTransactions();
+    }
+    else
+    {
+        updateTransactionBalances();
+    }
+
 }
 
 void Database::sortTransactions()
 {
     auto cmp = [](const Transaction& a, const Transaction& b)
     {
-        if (a.date < b.date)
-        {
-            return true;
-        }
-        else if (a.date == b.date)
-        {
-            if (a.walletIndex < b.walletIndex)
-            {
-                return true;
-            }
-            else if (a.walletIndex == b.walletIndex)
-            {
-                if (a.locationIndex < b.locationIndex)
-                {
-                    return true;
-                }
-                else if (a.locationIndex == b.locationIndex)
-                {
-                    return a.value > b.value;
-                }
-            }
-        }
-        return false;
+        return a.date < b.date;
+//        if (a.date < b.date)
+//        {
+//            return true;
+//        }
+//        else if (a.date == b.date)
+//        {
+//            if (a.walletIndex < b.walletIndex)
+//            {
+//                return true;
+//            }
+//            else if (a.walletIndex == b.walletIndex)
+//            {
+//                if (a.locationIndex < b.locationIndex)
+//                {
+//                    return true;
+//                }
+//                else if (a.locationIndex == b.locationIndex)
+//                {
+//                    return a.value > b.value;
+//                }
+//            }
+//        }
+//        return false;
     };
     std::sort(m_transactions.begin(), m_transactions.end(), cmp);
     updateTransactionBalances();
-    emit transactionsModified();
+    m_isModified = true;
 }
 
 
@@ -486,6 +501,7 @@ void Database::updateTransactionBalances()
         wallet.value += tx.value;
         tx.balance = wallet.value;
     }
+    emit transactionsModified();
     updateTotalValue();
 }
 

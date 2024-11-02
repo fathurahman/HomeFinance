@@ -15,6 +15,7 @@ SOURCES += \
     database.cpp \
     databasefile.cpp \
     datatypes.cpp \
+    edittransactiondialog.cpp \
     main.cpp \
     mainwindow.cpp \
     transactiontablemodel.cpp \
@@ -29,6 +30,7 @@ HEADERS += \
     database.h \
     databasefile.h \
     datatypes.h \
+    edittransactiondialog.h \
     mainwindow.h \
     transactiontablemodel.h \
     filterwidget.h \
