@@ -32,7 +32,7 @@ public:
     inline const QStringList& itemNames() const { return m_itemNames; }
     QCompleter* createItemNameCompleter(QObject* parent) const;
 
-    inline const QStringList& locationNames() const { return m_locationNames; }
+    inline const QStringList& locationNames() const { return m_locationNames; }    
     QCompleter* createLocationNameCompleter(QObject* parent);   
     inline int activeLocationIndex() const { return m_activeLocationIndex; }
 
@@ -44,6 +44,10 @@ public:
 
     void deleteTransaction(int index);
     void editTransaction(int index, const Transaction& tx);
+
+    int getOrAddWalletIndexByName(const QString& name);
+    int getOrAddLocationIndexByName(const QString& name);
+    int getOrAddItemIndexByName(const QString& name);
 
 signals:
     void walletAdded();
@@ -69,10 +73,6 @@ private:
     void updateTotalValue(bool forceUpdate = false);    
     void updateTransactionBalancesForWallet(int walletIndex);
     void updateTransactionBalances();
-
-    int getOrAddWalletIndexByName(const QString& name);
-    int getOrAddLocationIndexByName(const QString& name);
-    int getOrAddItemIndexByName(const QString& name);
 
     bool filterDate(const QDate &date, const TransactionFilter& filter) const;
     bool filterLocationIndex(int index, const TransactionFilter& filter) const;

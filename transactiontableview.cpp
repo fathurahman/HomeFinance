@@ -45,7 +45,13 @@ void TransactionTableView::onCustomContextMenuRequested(QPoint pos)
 
 void TransactionTableView::editSelected()
 {
-    // TODO: edit transaction dialog
+    const int index = m_selectedIndex.row();
+    EditTransactionDialog d(index, this);
+    int ret = d.exec();
+    if (ret)
+    {
+        db->editTransaction(index, d.transaction());
+    }
 }
 
 void TransactionTableView::deleteSelected()
