@@ -216,7 +216,7 @@ bool Database::addJournal(const Journal &journal)
             }
         }
         i += 1;
-        if (i == m_transactions.size() - 1)
+        if (i >= m_transactions.size() - 1)
         {
             i = -1;
         }
