@@ -63,7 +63,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         switch(col)
         {
         case 0:
-            return t.date;
+            return t.date.toString();
         case 1:
             return t.locationName();
         case 2:
