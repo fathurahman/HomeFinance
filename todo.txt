@@ -3,3 +3,6 @@
 * Kategori Item
 * Mark last date
 * Operation : Pindah buku dengan default item name : Tarik Tunai
+* Pertama kali run scroll transaksi ke paling bawah donk bos,
+  atau dibatasi transaksi bulan ini
+* Bring back the time!
