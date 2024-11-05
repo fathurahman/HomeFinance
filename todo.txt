@@ -1,3 +1,5 @@
 * View : Fluktuasi dompet harian
 * View : Laporan bulanan
 * Kategori Item
+* Mark last date
+* Operation : Pindah buku dengan default item name : Tarik Tunai
