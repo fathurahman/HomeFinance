@@ -396,7 +396,7 @@ QList<int> Database::filterTransactions(const TransactionFilter &filter) const
 void Database::deleteTransaction(int index)
 {
     m_isModified = true;
-    m_transactions.remove(index);
+    m_transactions.removeAt(index);
     emit transactionsModified();
 }
 
